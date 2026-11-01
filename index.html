@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NBA Predictor</title>
+<style>
+:root{--bg:#0b0f17;--card:#141b29;--card2:#1b2436;--line:#243049;--tx:#e8edf7;--mut:#8b97b0;--ok:#3ddc97;--warn:#ffb84d;--bad:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:18px 16px 6px}
+h1{margin:0;font-size:22px}
+.sub{color:var(--mut);font-size:12px;margin-top:2px}
+nav{display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap}
+nav button{background:var(--card);color:var(--tx);border:1px solid var(--line);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px}
+nav button.on{background:#2d5bff;border-color:#2d5bff}
+#status{padding:0 16px 8px;color:var(--mut);font-size:12px;min-height:18px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;padding:0 16px 30px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.15s}
+.card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
+.top{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-bottom:10px}
+.teams{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tm{flex:1;text-align:center}
+.tm img{width:48px;height:48px;object-fit:contain}
+.tm b{display:block;font-size:16px}
+.tm small{color:var(--mut)}
+.at{color:var(--mut);font-size:12px}
+.pbar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:12px 0 6px;background:var(--line)}
+.pbar i{display:block;height:100%}
+.pl{display:flex;justify-content:space-between;font-weight:700}
+.pick{margin-top:8px;padding:8px 10px;background:var(--card2);border-radius:10px;font-size:13px}
+.pick b{color:var(--ok)}
+.why{margin:8px 0 0;padding-left:18px;color:var(--mut);font-size:12px}
+.final{color:var(--warn);font-weight:700}
+#modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px;z-index:9}
+#modal.show{display:flex}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:16px;width:min(880px,100%);padding:18px;position:relative}
+.x{position:absolute;right:12px;top:10px;background:none;border:0;color:var(--tx);font-size:24px;cursor:pointer}
+h2{font-size:15px;margin:20px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+table{width:100%;border-collapse:collapse}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+.pp{width:50%}
+.pp small{color:var(--mut);display:block}
+.hl{background:#3ddc9718}
+.pos{display:inline-block;min-width:26px;color:var(--mut);font-size:11px}
+.cmp{display:grid;grid-template-columns:60px 1fr 120px 1fr 60px;gap:6px;align-items:center;padding:4px 0;font-size:13px}
+.cmp .l{text-align:center;color:var(--mut);font-size:12px}
+.cmp .bar{height:8px;background:var(--line);border-radius:9px;display:flex}
+.cmp .bar.a{justify-content:flex-end}
+.cmp .bar i{display:block;height:100%;border-radius:9px;background:#5b6b8c}
+.cmp .bar i.w{background:var(--ok)}
+.cmp .v{font-weight:600}.cmp .v.r{text-align:right}
+.w-txt{color:var(--ok)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
+.chip.W{background:#3ddc9730;color:var(--ok)}.chip.L{background:#ff6b6b30;color:var(--bad)}
+.inj{font-size:12px;color:var(--mut)}
+.inj b.o{color:var(--bad)}.inj b.q{color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.two{grid-template-columns:1fr}.cmp{grid-template-columns:44px 1fr 80px 1fr 44px}}
+footer{padding:0 16px 30px;color:var(--mut);font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏀 NBA Predictor</h1>
+  <div class="sub">Elo + efficiency + form + rest + home court + h2h + lineup/injuries · Oras sa Manila</div>
+</header>
+<nav id="tabs"></nav>
+<div id="status"></div>
+<main id="grid"></main>
+<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro.</footer>
+<div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
+
+<script>
+const API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
+const API2='https://site.api.espn.com/apis/v2/sports/basketball/nba';
+const SEASON_START='2026-10-15';
+const PRIOR_SEASON=2026;          // ESPN: 2026 = 2025-26 season
+const HCA=2.5;                    // home court advantage (pts)
+const $=s=>document.querySelector(s);
+const fmtET=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+const ymd=s=>s.replace(/-/g,'');
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const getJSON=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status+' '+u);return r.json()};
+const f1=x=>(x>=0?'+':'')+x.toFixed(1);
+
+let SCHED={}, M={}, INJ={}, PL={}, PRIOR={}, CUR=1, DAYS=[];
+
+/* ---------- parsing ---------- */
+const tm=x=>({id:String(x.team.id),abbr:x.team.abbreviation,name:x.team.displayName,logo:x.team.logo,
+  color:x.team.color?'#'+x.team.color:'#888',score:+x.score||0,record:x.records?.[0]?.summary||''});
+function parseEvent(e){
+  const c=e.competitions[0];
+  const h=c.competitors.find(x=>x.homeAway==='home'),a=c.competitors.find(x=>x.homeAway==='away');
+  const st=c.status||e.status;
+  return {id:e.id,date:e.date,etDay:fmtET(new Date(e.date)),type:e.season?.type,
+    state:st.type.state,completed:st.type.completed,detail:st.type.shortDetail,home:tm(h),away:tm(a)};
+}
+async function loadDay(d){
+  try{const j=await getJSON(`${API}/scoreboard?dates=${ymd(d)}&limit=100`);
+    SCHED[d]=(j.events||[]).map(parseEvent);}catch(e){SCHED[d]=[];}
+}
+async function loadPrior(){
+  try{
+    const j=await getJSON(`${API2}/standings?season=${PRIOR_SEASON}`);const out={};
+    const walk=n=>{
+      (n.standings?.entries||[]).forEach(e=>{
+        const st={};(e.stats||[]).forEach(s=>st[s.name]=s.value);
+        let d=st.differential??st.pointDifferential??st.pointsDiff;const gp=st.gamesPlayed||82;
+        if(d!=null)out[String(e.team.id)]=(Math.abs(d)>25?d/gp:d)*0.6; // regress to mean
+      });
+      (n.children||[]).forEach(walk);
+    };
+    walk(j);return out;
+  }catch(e){return {}}
+}
+async function loadInj(){
+  try{
+    const j=await getJSON(`${API}/injuries`);const out={};
+    (j.injuries||[]).forEach(t=>{
+      const list=(t.injuries||[]).map(i=>({id:String(i.athlete?.id||''),name:i.athlete?.displayName||'?',status:i.status||'',note:i.shortComment||''}));
+      out[String(t.id)]=list;out[t.displayName]=list;
+    });
+    return out;
+  }catch(e){return {}}
+}
+
+/* ---------- ratings (SRS + Elo + prior) ---------- */
+function buildModel(games){
+  const T={};
+  const get=t=>T[t.id]??={id:t.id,abbr:t.abbr,name:t.name,logo:t.logo,color:t.color,g:[],prior:PRIOR[t.id]??0};
+  games.sort((a,b)=>a.date.localeCompare(b.date));
+  for(const g of games){
+    const H=get(g.home),A=get(g.away),m=g.home.score-g.away.score;
+    H.g.push({id:g.id,day:g.etDay,opp:A.id,home:true,pf:g.home.score,pa:g.away.score,m});
+    A.g.push({id:g.id,day:g.etDay,opp:H.id,home:false,pf:g.away.score,pa:g.home.score,m:-m});
+  }
+  const ids=Object.keys(T);
+  // opponent-adjusted margin (SRS)
+  let r={};ids.forEach(i=>r[i]=0);
+  for(let it=0;it<30;it++){
+    const nr={};
+    for(const i of ids){const t=T[i];
+      nr[i]=t.g.length?t.g.reduce((s,x)=>s+(x.m-(x.home?HCA:-HCA))+(r[x.opp]||0),0)/t.g.length:0;}
+    r=nr;
+  }
+  // Elo with margin-of-victory
+  const elo={};ids.forEach(i=>elo[i]=1500+T[i].prior*25);
+  for(const g of games){
+    const h=g.home.id,a=g.away.id,m=g.home.score-g.away.score;
+    const dH=elo[h]+HCA*25-elo[a],p=1/(1+Math.pow(10,-dH/400));
+    const mult=Math.pow(Math.abs(m)+3,0.8)/(7.5+0.006*Math.abs(dH));
+    const d=20*mult*((m>0?1:0)-p);elo[h]+=d;elo[a]-=d;
+  }
+  for(const i of ids){
+    const t=T[i],n=t.g.length,w=n/(n+10);
+    t.n=n;t.srs=r[i];t.elo=elo[i];t.eloPts=(elo[i]-1500)/25;
+    t.str=0.5*(w*r[i]+(1-w)*t.prior)+0.5*t.eloPts;
+    t.pf=n?t.g.reduce((s,x)=>s+x.pf,0)/n:112;
+    t.pa=n?t.g.reduce((s,x)=>s+x.pa,0)/n:112;
+    t.net=t.pf-t.pa;
+    const l10=t.g.slice(-10);
+    t.l10=l10.length?l10.reduce((s,x)=>s+x.m,0)/l10.length:0;
+    t.w=t.g.filter(x=>x.m>0).length;t.l=n-t.w;
+  }
+  return T;
+}
+
+/* ---------- players / lineups (from boxscores of last 5 games) ---------- */
+const POSORD={PG:1,G:1.5,SG:2,SF:3,F:3.5,PF:4,C:5};
+const ensure=id=>(PL[id]??=loadTeam(id));
+async function loadTeam(id){
+  const gs=(M[id]?.g||[]).slice(-5);
+  const sums=await Promise.all(gs.map(g=>getJSON(`${API}/summary?event=${g.id}`).catch(()=>null)));
+  const pl={},tgs=[];
+  for(const s of sums){
+    const tb=s?.boxscore?.players?.find(x=>String(x.team.id)===String(id));if(!tb)continue;
+    const tot={pts:0,reb:0,ast:0,to:0,stl:0,blk:0,fgm:0,fga:0,tpm:0,tpa:0};
+    for(const st of tb.statistics||[]){
+      const L=st.labels||[];
+      for(const a of st.athletes||[]){
+        if(a.didNotPlay||!a.stats?.length)continue;
+        const g=k=>a.stats[L.indexOf(k)];
+        const n=k=>parseFloat(g(k))||0;
+        const pr=k=>String(g(k)||'0-0').split('-').map(x=>parseFloat(x)||0);
+        const min=n('MIN');if(min<=0)continue;
+        const [fgm,fga]=pr('FG'),[tpm,tpa]=pr('3PT');
+        const o=pl[a.athlete.id]??={id:String(a.athlete.id),name:a.athlete.displayName,pos:a.athlete.position?.abbreviation||'',
+          gp:0,starts:0,min:0,pts:0,reb:0,ast:0,fgm:0,fga:0,tpm:0,tpa:0};
+        o.gp++;o.starts+=a.starter?1:0;o.min+=min;o.pts+=n('PTS');o.reb+=n('REB');o.ast+=n('AST');
+        o.fgm+=fgm;o.fga+=fga;o.tpm+=tpm;o.tpa+=tpa;
+        tot.pts+=n('PTS');tot.reb+=n('REB');tot.ast+=n('AST');tot.to+=n('TO');tot.stl+=n('STL');tot.blk+=n('BLK');
+        tot.fgm+=fgm;tot.fga+=fga;tot.tpm+=tpm;tot.tpa+=tpa;
+      }
+    }
+    tgs.push(tot);
+  }
+  const players=Object.values(pl).map(o=>({...o,mpg:o.min/o.gp,ppg:o.pts/o.gp,rpg:o.reb/o.gp,apg:o.ast/o.gp,
+    fgp:o.fga?o.fgm/o.fga*100:0,tpp:o.tpa?o.tpm/o.tpa*100:0}));
+  const starters=[...players].sort((a,b)=>b.starts-a.starts||b.mpg-a.mpg).slice(0,5)
+    .sort((a,b)=>(POSORD[a.pos]||9)-(POSORD[b.pos]||9));
+  const k=tgs.length||1,sum=f=>tgs.reduce((s,x)=>s+x[f],0);
+  const team=tgs.length?{reb:sum('reb')/k,ast:sum('ast')/k,to:sum('to')/k,stl:sum('stl')/k,blk:sum('blk')/k,
+    fgp:sum('fga')?sum('fgm')/sum('fga')*100:0,tpp:sum('tpa')?sum('tpm')/sum('tpa')*100:0}:null;
+  return {players,starters,team,sample:tgs.length};
+}
+
+/* ---------- injuries ---------- */
+const SEV=s=>{s=(s||'').toLowerCase();if(s.includes('out'))return 1;if(s.includes('doubt'))return .8;
+  if(s.includes('quest')||s.includes('day'))return .35;return 0};
+function injImpact(team){
+  const list=INJ[team.id]||INJ[team.name]||[];const pl=PL[team.id];
+  if(!pl||!pl.then){} // placeholder
+  const data=PL_DONE[team.id];let pts=0;const names=[];
+  for(const i of list){
+    const sv=SEV(i.status);if(!sv)continue;
+    const p=data?.players.find(x=>x.id===i.id||x.name===i.name);
+    if(p){
+      const v=Math.min(7,Math.max(0,(p.ppg+0.7*p.apg+0.7*p.rpg-8)*0.22))*sv;
+      pts+=v;if(v>0.5)names.push(`${i.name} (${i.status})`);
+    }
+  }
+  return {pts,names};
+}
+const PL_DONE={};
+
+/* ---------- prediction ---------- */
+function playedDays(id){
+  const s=new Set((M[id]?.g||[]).map(x=>x.day));
+  for(const d in SCHED)for(const e of SCHED[d])if(e.home.id===id||e.away.id===id)s.add(e.etDay);
+  return s;
+}
+function restOf(id,day){
+  const ds=[...playedDays(id)].filter(d=>d<day).sort();
+  if(!ds.length)return {b2b:false,d:null};
+  const diff=Math.round((Date.parse(day)-Date.parse(ds[ds.length-1]))/864e5);
+  return {b2b:diff===1,d:diff-1};
+}
+function predict(ev){
+  const H=M[ev.home.id],A=M[ev.away.id];
+  if(!H||!A)return null;
+  const rH=restOf(H.id,ev.etDay),rA=restOf(A.id,ev.etDay);
+  const iH=injImpact(H),iA=injImpact(A);
+  const h2hG=H.g.filter(x=>x.opp===A.id);
+  const h2h=h2hG.length?h2hG.reduce((s,x)=>s+(x.home?x.m-HCA:x.m+HCA),0)/h2hG.length*0.1:0;
+  const F={
+    rating:H.str-A.str,
+    home:HCA,
+    rest:(rA.b2b?2:0)-(rH.b2b?2:0),
+    form:0.12*(H.l10-A.l10),
+    h2h,
+    inj:iA.pts-iH.pts
+  };
+  const spread=Object.values(F).reduce((a,b)=>a+b,0);
+  const p=1/(1+Math.exp(-spread*0.145));
+  const tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
+  const hn=ev.home.abbr,an=ev.away.abbr;
+  const T={
+    rating:v=>`${v>0?hn:an} mas malakas sa ratings (${Math.abs(v).toFixed(1)} pts)`,
+    home:()=>`Home court advantage ng ${hn}`,
+    rest:v=>v>0?`${hn} ay fresh, ${an} ay back-to-back`:`${an} ay fresh, ${hn} ay back-to-back`,
+    form:v=>`Mas maganda ang huling 10 games ng ${v>0?hn:an}`,
+    h2h:v=>`${v>0?hn:an} ang lamang sa head-to-head ngayong season`,
+    inj:v=>v>0?`May injury sa ${an}${iA.names.length?': '+iA.names.join(', '):''}`:`May injury sa ${hn}${iH.names.length?': '+iH.names.join(', '):''}`
+  };
+  const labels={rating:'Overall rating (Elo + efficiency)',home:'Home court',rest:'Rest / back-to-back',form:'Recent form (L10)',h2h:'Head-to-head',inj:'Injuries / lineup'};
+  const reasons=Object.entries(F).filter(([k,v])=>Math.abs(v)>=0.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))
+    .map(([k,v])=>T[k](v));
+  return {p,spread,F,labels,reasons,sH:(tot+spread)/2,sA:(tot-spread)/2,rH,rA,iH,iA,
+    lineupReady:!!(PL_DONE[H.id]&&PL_DONE[A.id])};
+}
+
+/* ---------- UI ---------- */
+const manila=d=>new Date(d).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const img=u=>u?`<img src="${u}" alt="" onerror="this.style.display='none'">`:'';
+function cardHTML(ev){
+  const p=predict(ev),h=ev.home,a=ev.away;
+  let mid='';
+  if(p){
+    const pH=Math.round(p.p*100),pA=100-pH,fav=pH>=50?h:a,sp=Math.abs(p.spread);
+    mid=`<div class="pbar"><i style="width:${pA}%;background:${a.color}"></i><i style="width:${pH}%;background:${h.color}"></i></div>
+    <div class="pl"><span>${a.abbr} ${pA}%</span><span>${h.abbr} ${pH}%</span></div>
+    <div class="pick">Pick: <b>${fav.name}</b> (${fav.abbr} -${sp.toFixed(1)}) · Predicted: ${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</div>
+    <ul class="why">${p.reasons.slice(0,3).map(r=>`<li>${r}</li>`).join('')||'<li>Halos pantay ang dalawang team</li>'}</ul>`;
+  }else mid='<div class="pick">Walang sapat na data para sa prediction.</div>';
+  const status=ev.state==='post'?`<span class="final">FINAL ${a.score}-${h.score}</span>`:ev.state==='in'?`<span class="final">LIVE · ${ev.detail}</span>`:'';
+  return `<div class="card" onclick="openDetail('${ev.id}')">
+    <div class="top"><span>${manila(ev.date)} (Manila)</span>${status}</div>
+    <div class="teams">
+      <div class="tm">${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small></div>
+      <div class="at">@</div>
+      <div class="tm">${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small></div>
+    </div>${mid}</div>`;
+}
+function renderTabs(){
+  const lbl=['Ngayon','Bukas','Susunod'];
+  $('#tabs').innerHTML=DAYS.map((d,i)=>`<button class="${i===CUR?'on':''}" onclick="selectDay(${i})">${lbl[i]} · ${d.slice(5)} (ET)</button>`).join('');
+}
+function renderGrid(){
+  const evs=SCHED[DAYS[CUR]]||[];
+  $('#grid').innerHTML=evs.length?evs.map(cardHTML).join(''):'<div class="sub" style="padding:20px">Walang laro sa araw na ito.</div>';
+}
+async function selectDay(i){
+  CUR=i;renderTabs();renderGrid();
+  const evs=SCHED[DAYS[i]]||[];
+  const ids=[...new Set(evs.flatMap(e=>[e.home.id,e.away.id]))];
+  $('#status').textContent='Kinukuha ang lineup at injury data…';
+  await Promise.all(ids.map(async id=>{PL_DONE[id]=await ensure(id)}));
+  if(CUR===i){renderGrid();$('#status').textContent=`Tapos na. ${evs.length} laro · NBA date ${DAYS[i]} (ET). Ang oras sa card ay Manila time.`}
+}
+
+/* ---------- detail modal ---------- */
+function closeModal(){$('#modal').classList.remove('show')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+async function openDetail(id){
+  const ev=Object.values(SCHED).flat().find(e=>e.id===id);if(!ev)return;
+  $('#modal').classList.add('show');$('#mbody').innerHTML='<p>Kinukuha ang stats…</p>';
+  const [pH,pA]=await Promise.all([ensure(ev.home.id),ensure(ev.away.id)]);
+  PL_DONE[ev.home.id]=pH;PL_DONE[ev.away.id]=pA;
+  const p=predict(ev),H=M[ev.home.id],A=M[ev.away.id],h=ev.home,a=ev.away;
+  if(!p){$('#mbody').innerHTML='<p>Walang sapat na data.</p>';return}
+  const pHp=Math.round(p.p*100),pAp=100-pHp;
+  let html=`<h1 style="font-size:20px">${a.name} @ ${h.name}</h1>
+  <div class="sub">${manila(ev.date)} (Manila)</div>
+  <div class="pbar" style="height:14px"><i style="width:${pAp}%;background:${a.color}"></i><i style="width:${pHp}%;background:${h.color}"></i></div>
+  <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
+  <div class="pick">Predicted score: <b>${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</b> · Spread (home): ${f1(p.spread)}</div>
+  <h2>Breakdown ng prediction (puntos para sa ${h.abbr})</h2>
+  <table>${Object.entries(p.F).map(([k,v])=>`<tr><td>${p.labels[k]}</td><td style="text-align:right;color:${v>0?'var(--ok)':v<0?'var(--bad)':'var(--mut)'}">${f1(v)}</td></tr>`).join('')}</table>`;
+
+  // starters
+  const row=(x,y)=>{
+    const sc=q=>q?q.ppg+q.rpg+q.apg:0,aw=sc(x)>sc(y);
+    const cell=(q,win)=>q?`<td class="pp ${win?'hl':''}"><span class="pos">${q.pos}</span><b>${q.name}</b><small>${q.ppg.toFixed(1)} PPG · ${q.rpg.toFixed(1)} RPG · ${q.apg.toFixed(1)} APG · ${q.fgp.toFixed(0)}% FG · ${q.tpp.toFixed(0)}% 3P</small></td>`:'<td class="pp">—</td>';
+    return `<tr>${cell(x,aw)}${cell(y,!aw&&sc(y)>0)}</tr>`;
+  };
+  html+=`<h2>Projected starting 5 (huling ${Math.max(pA.sample,pH.sample)} laro)</h2>
+  <table><tr><th>${a.abbr}</th><th>${h.abbr}</th></tr>${[0,1,2,3,4].map(i=>row(pA.starters[i],pH.starters[i])).join('')}</table>`;
+
+  // injuries
+  const injList=t=>{const l=INJ[t.id]||INJ[t.name]||[];
+    return l.length?l.map(i=>`<div><b class="${SEV(i.status)>=.8?'o':'q'}">${i.status}</b> ${i.name}${i.note?' – '+i.note:''}</div>`).join(''):'<div>Walang naka-report.</div>'};
+  html+=`<h2>Injury report</h2><div class="two inj"><div><b>${a.abbr}</b>${injList(a)}</div><div><b>${h.abbr}</b>${injList(h)}</div></div>`;
+
+  // stats compare
+  const aT=pA.team,hT=pH.team;
+  const rows=[['PPG',A.pf,H.pf,1,1],['Opp PPG',A.pa,H.pa,0,1],['Net',A.net,H.net,1,1],['L10 net',A.l10,H.l10,1,1],
+    ['Rating',A.str,H.str,1,1]];
+  if(aT&&hT)rows.push(['FG%',aT.fgp,hT.fgp,1,1],['3P%',aT.tpp,hT.tpp,1,1],['REB',aT.reb,hT.reb,1,1],['AST',aT.ast,hT.ast,1,1],
+    ['TO',aT.to,hT.to,0,1],['STL',aT.stl,hT.stl,1,1],['BLK',aT.blk,hT.blk,1,1]);
+  let aw=0,hw=0;
+  const cmp=rows.map(([l,av,hv,hi])=>{
+    const better=hi?(av>hv?'a':av<hv?'h':''):(av<hv?'a':av>hv?'h':'');
+    if(better==='a')aw++;if(better==='h')hw++;
+    let sa=hi?av:1/Math.max(av,.1),sh=hi?hv:1/Math.max(hv,.1);
+    if(hi&&(av<0||hv<0)){sa=av+50;sh=hv+50}
+    const tot=(sa+sh)||1,wa=sa/tot*100,wh=sh/tot*100;
+    return `<div class="cmp"><span class="v ${better==='a'?'w-txt':''}">${av.toFixed(1)}</span>
+      <div class="bar a"><i class="${better==='a'?'w':''}" style="width:${wa}%"></i></div><span class="l">${l}</span>
+      <div class="bar"><i class="${better==='h'?'w':''}" style="width:${wh}%"></i></div><span class="v r ${better==='h'?'w-txt':''}">${hv.toFixed(1)}</span></div>`;
+  }).join('');
+  const lead=aw>hw?a.abbr:hw>aw?h.abbr:null;
+  html+=`<h2>Team stats — ${a.abbr} vs ${h.abbr}</h2>${cmp}
+  <div class="pick">${lead?`Lamang ang <b>${lead}</b> sa ${Math.max(aw,hw)} sa ${rows.length} categories`:'Pantay ang dalawa sa stats'}</div>
+  <div class="sub" style="margin-top:4px">PPG/Net/Rating = buong season. FG%, 3P%, REB, AST, TO, STL, BLK = average ng huling ${Math.max(pA.sample,pH.sample)} laro.</div>`;
+
+  // form
+  const chips=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
+  html+=`<h2>Huling 10 laro</h2><div class="two"><div><b>${a.abbr}</b> (${A.w}-${A.l})${chips(A)}</div><div><b>${h.abbr}</b> (${H.w}-${H.l})${chips(H)}</div></div>`;
+  html+=`<div class="sub" style="margin-top:12px">Rest: ${a.abbr} ${p.rA.d==null?'—':p.rA.b2b?'back-to-back':p.rA.d+' araw pahinga'} · ${h.abbr} ${p.rH.d==null?'—':p.rH.b2b?'back-to-back':p.rH.d+' araw pahinga'}</div>`;
+  $('#mbody').innerHTML=html;
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  $('#status').textContent='Kinukuha ang schedule at resulta…';
+  try{
+    const today=fmtET(new Date());
+    DAYS=[today,addDays(today,1),addDays(today,2)];
+    const all=[];for(let d=SEASON_START;d<=DAYS[2];d=addDays(d,1))all.push(d);
+    const [prior,inj]=await Promise.all([loadPrior(),loadInj(),Promise.all(all.map(loadDay))]);
+    PRIOR=prior;INJ=inj;
+    const seen=new Map();
+    for(const d of all)for(const e of SCHED[d]||[])
+      if(e.completed&&e.type!==1&&e.etDay<=today)seen.set(e.id,e);
+    M=buildModel([...seen.values()]);
+    renderTabs();renderGrid();
+    $('#status').textContent=`${seen.size} natapos na laro ang ginamit sa ratings.`;
+    selectDay(1);
+  }catch(err){
+    $('#status').innerHTML=`<span style="color:var(--bad)">Hindi makuha ang data: ${err.message}. Subukan ulit o i-check ang internet.</span>`;
+  }
+})();
+</script>
+</body>
+</html>
