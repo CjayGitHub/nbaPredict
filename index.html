@@ -11,6 +11,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-app
 header{padding:18px 16px 6px}
 h1{margin:0;font-size:22px}
 .sub{color:var(--mut);font-size:12px;margin-top:2px}
+#trk{color:var(--mut);font-size:10px;margin-top:4px}
 nav{display:flex;gap:8px;padding:12px 16px;flex-wrap:wrap}
 nav button{background:var(--card);color:var(--tx);border:1px solid var(--line);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px}
 nav button.on{background:#2d5bff;border-color:#2d5bff}
@@ -20,17 +21,18 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 .card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
 .card.isLive{border-color:#ff6b6b88}
 .top{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-bottom:10px;gap:8px}
-.teams{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.teams{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .tm{flex:1;text-align:center;border-radius:10px;padding:4px}
 .tm:hover{background:var(--card2)}
-.tm img{width:48px;height:48px;object-fit:contain}
+.tm img{display:block;width:48px;height:48px;object-fit:contain;margin:0 auto 4px}
 .tm b{display:block;font-size:16px}
 .tm small{color:var(--mut)}
-.side{font-size:10px;letter-spacing:.08em;color:var(--mut);background:var(--card2);padding:1px 8px;border-radius:99px;display:inline-block;margin-bottom:4px;font-weight:700}
+.side{display:block;width:max-content;margin:0 auto 6px;font-size:9px;letter-spacing:.1em;color:var(--mut);background:var(--card2);padding:1px 7px;border-radius:99px;font-weight:700;line-height:1.5}
 .side.home{background:#2d5bff33;color:#9db4ff}
+.side.inl{display:inline-block;margin:0 4px;vertical-align:middle}
 .sc{font-size:28px;font-weight:800;line-height:1.1}
 .sc.lead{color:var(--ok)}
-.at{color:var(--mut);font-size:12px}
+.at{color:var(--mut);font-size:12px;margin-top:50px}
 .live{color:var(--bad);font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block;animation:pulse 1.2s infinite}
 @keyframes pulse{50%{opacity:.25}}
@@ -43,12 +45,13 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 .pick b{color:var(--ok)}
 .why{margin:8px 0 0;padding-left:18px;color:var(--mut);font-size:12px}
 .final{color:var(--warn);font-weight:700}
+.mk{font-size:10px;font-weight:700}.mk.ok{color:var(--ok)}.mk.no{color:var(--bad)}
 #modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px;z-index:9}
 #modal.show{display:flex}
 .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px;width:min(880px,100%);padding:18px;position:relative}
 .x{position:absolute;right:12px;top:10px;background:none;border:0;color:var(--tx);font-size:24px;cursor:pointer}
 .back{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;margin-bottom:10px}
-.tbtn{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:700;margin-right:6px}
+.tbtn{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:700;margin:0 6px 6px 0}
 .tbtn:hover{border-color:#3b5bdb}
 h2{font-size:15px;margin:20px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 table{width:100%;border-collapse:collapse}
@@ -69,6 +72,8 @@ td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px;vertica
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
 .chip.W{background:#3ddc9730;color:var(--ok)}.chip.L{background:#ff6b6b30;color:var(--bad)}
+.tag{display:inline-block;font-size:11px;background:var(--card2);border:1px solid var(--line);padding:1px 7px;border-radius:99px;margin:2px 3px 2px 0;color:var(--mut)}
+.tag.bad{color:var(--warn);border-color:#ffb84d55}
 .inj{font-size:12px;color:var(--mut)}
 .inj b.o,.o{color:var(--bad)}.inj b.q,.q{color:var(--warn)}
 .note{font-size:12px;padding:8px 10px;border-radius:10px;background:#ffb84d18;border:1px solid #ffb84d55;margin:6px 0}
@@ -81,12 +86,13 @@ footer{padding:0 16px 30px;color:var(--mut);font-size:11px}
 <body>
 <header>
   <h1>🏀 NBA Predictor</h1>
-  <div class="sub">Elo + efficiency + form + rest + home court + h2h + lineup/injuries · Lahat ng oras at petsa ay Manila time</div>
+  <div class="sub">Elo + efficiency + four factors + form + rest/travel + matchup + lineup/injuries · Lahat ng oras at petsa ay Manila time</div>
+  <div id="trk"></div>
 </header>
 <nav id="tabs"></nav>
 <div id="status"></div>
 <main id="grid"></main>
-<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro, at hindi kasama ang mga Out/Doubtful. Ang live score ay nag-a-auto update kada 20 segundo.</footer>
+<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling laro ng team at hindi kasama ang mga Out/Doubtful. Nag-a-auto update ang live score kada 20 segundo. Ang tracker ay naka-save sa browser mo lang.</footer>
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
 
 <script>
@@ -96,7 +102,11 @@ const SEASON_START='2026-10-15';
 const PRIOR_SEASON=2026;
 const HCA=2.5;
 const REFRESH_MS=20000;
+const SAMPLE=15;      // ilang huling laro ng team ang kukunan ng boxscore
+const RECENT=5;       // "recent" window sa loob ng sample
+const LG={tp:0.36,orb:0.27,tov:0.135};   // league averages (approx)
 const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dayIn=(d,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const fmtET=d=>dayIn(d,'America/New_York');   // pang-fetch lang ng schedule ng ESPN at rest computation
 const fmtMN=d=>dayIn(d,'Asia/Manila');         // ito ang ipinapakita sa UI
@@ -105,11 +115,54 @@ const addDays=(s,n)=>{const d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate
 const getJSON=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status+' '+u);return r.json()};
 const f1=x=>(x>=0?'+':'')+x.toFixed(1);
 
-let SCHED={}, M={}, INJ={}, PL={}, PRIOR={}, CUR=0, DAYS=[], STATUS_BASE='', LASTSIG='';
+let SCHED={}, M={}, INJ={}, PL={}, PL_N={}, PRIOR={}, CUR=0, DAYS=[], STATUS_BASE='', LASTSIG='', TICK=0;
 const PL_DONE={};
-const allEvents=()=>Object.values(SCHED).flat();
+const allEvents=()=>{const m=new Map();for(const d in SCHED)for(const e of SCHED[d])m.set(e.id,e);return [...m.values()]};
 const evsOn=day=>allEvents().filter(e=>e.mnDay===day).sort((a,b)=>a.date.localeCompare(b.date));
 const findEv=id=>allEvents().find(e=>e.id===id);
+
+/* ---------- lokasyon ng arena (lat, lon, tz offset sa standard time) ---------- */
+const LOC={ATL:[33.757,-84.396,-5],BOS:[42.366,-71.062,-5],BKN:[40.683,-73.975,-5],CHA:[35.225,-80.839,-5],CHI:[41.881,-87.674,-6],
+CLE:[41.496,-81.688,-5],DAL:[32.790,-96.810,-6],DEN:[39.749,-105.008,-7],DET:[42.341,-83.055,-5],GS:[37.768,-122.388,-8],
+HOU:[29.751,-95.362,-6],IND:[39.764,-86.156,-5],LAC:[33.943,-118.341,-8],LAL:[34.043,-118.267,-8],MEM:[35.138,-90.051,-6],
+MIA:[25.781,-80.187,-5],MIL:[43.045,-87.917,-6],MIN:[44.980,-93.276,-6],NO:[29.949,-90.082,-6],NY:[40.751,-73.994,-5],
+OKC:[35.463,-97.515,-6],ORL:[28.539,-81.384,-5],PHI:[39.901,-75.172,-5],PHX:[33.446,-112.071,-7],POR:[45.532,-122.667,-8],
+SAC:[38.580,-121.500,-8],SA:[29.427,-98.438,-6],TOR:[43.643,-79.379,-5],UTA:[40.768,-111.901,-7],UTAH:[40.768,-111.901,-7],WSH:[38.898,-77.021,-5],WAS:[38.898,-77.021,-5]};
+function miles(a,b){const R=3959,r=x=>x*Math.PI/180;const dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+
+/* ---------- accuracy tracker (localStorage) ---------- */
+const TK_KEY='nbaTracker_v1';
+let TK={};
+try{TK=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}catch(e){TK={}}
+const saveTK=()=>{try{localStorage.setItem(TK_KEY,JSON.stringify(TK))}catch(e){}};
+function recordAll(){
+  let ch=false;
+  for(const e of allEvents()){
+    if(e.state!=='pre'||e.type===1)continue;
+    if(!PL_DONE[e.home.id]||!PL_DONE[e.away.id])continue;
+    const p=predict(e);if(!p)continue;
+    const ph=Math.round(p.p*1000)/1000;
+    if(!TK[e.id]||TK[e.id].ph!==ph){TK[e.id]={ph,h:e.home.abbr,a:e.away.abbr,d:e.date};ch=true}
+  }
+  if(ch)saveTK();
+}
+function trackStats(){
+  let w=0,l=0;const rec=[];
+  for(const id in TK){
+    const e=findEv(id);if(!e||!e.completed)continue;
+    const ok=(TK[id].ph>=.5)===(e.home.score>e.away.score);
+    ok?w++:l++;rec.push({d:e.date,ok});
+  }
+  rec.sort((a,b)=>a.d.localeCompare(b.d));
+  const L=rec.slice(-10),lw=L.filter(x=>x.ok).length;
+  return {w,l,n:w+l,l10w:lw,l10n:L.length};
+}
+function renderTracker(){
+  const s=trackStats();
+  $('#trk').textContent=s.n?`🎯 Tracker: ${s.w}-${s.l} (${Math.round(s.w/s.n*100)}%) · L10: ${s.l10w}-${s.l10n-s.l10w}`
+    :'🎯 Tracker: wala pang tapos na laro na na-save. Sine-save ng app ang pick bago magsimula ang laro.';
+}
 
 /* ---------- parsing ---------- */
 const tm=x=>({id:String(x.team.id),abbr:x.team.abbreviation,name:x.team.displayName,logo:x.team.logo,
@@ -151,7 +204,7 @@ async function loadInj(){
   }catch(e){return {}}
 }
 
-/* ---------- ratings ---------- */
+/* ---------- ratings, splits, SOS, clutch ---------- */
 function buildModel(games){
   const T={};
   const get=t=>T[t.id]??={id:t.id,abbr:t.abbr,name:t.name,logo:t.logo,color:t.color,g:[],prior:PRIOR[t.id]??0};
@@ -176,6 +229,7 @@ function buildModel(games){
     const mult=Math.pow(Math.abs(m)+3,0.8)/(7.5+0.006*Math.abs(dH));
     const d=20*mult*((m>0?1:0)-p);elo[h]+=d;elo[a]-=d;
   }
+  const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
   for(const i of ids){
     const t=T[i],n=t.g.length,w=n/(n+10);
     t.n=n;t.srs=r[i];t.elo=elo[i];t.eloPts=(elo[i]-1500)/25;
@@ -186,6 +240,16 @@ function buildModel(games){
     const l10=t.g.slice(-10);
     t.l10=l10.length?l10.reduce((s,x)=>s+x.m,0)/l10.length:0;
     t.w=t.g.filter(x=>x.m>0).length;t.l=n-t.w;
+    // home / road splits
+    const HG=t.g.filter(x=>x.home),RG=t.g.filter(x=>!x.home);
+    t.hn=HG.length;t.rn=RG.length;
+    t.hm=avg(HG.map(x=>x.m));t.rm=avg(RG.map(x=>x.m));t.mavg=avg(t.g.map(x=>x.m));
+    t.hw=HG.filter(x=>x.m>0).length;t.rw=RG.filter(x=>x.m>0).length;
+    // strength of schedule (avg rating ng nakalaban)
+    t.sos=avg(t.g.map(x=>r[x.opp]||0));
+    // close games (<=5 pts)
+    const cg=t.g.filter(x=>Math.abs(x.m)<=5);
+    t.cw=cg.filter(x=>x.m>0).length;t.cl=cg.length-t.cw;
   }
   return T;
 }
@@ -196,16 +260,14 @@ function rebuildModel(){
   return seen.size;
 }
 
-/* ---------- players (boxscores ng huling 5 laro) ---------- */
+/* ---------- boxscore parsing + cache ---------- */
 const POSORD={PG:1,G:1.5,SG:2,SF:3,F:3.5,PF:4,C:5};
-const ensure=id=>(PL[id]??=loadTeam(id));
-async function loadTeam(id){
-  const gs=(M[id]?.g||[]).slice(-5);
-  const sums=await Promise.all(gs.map(g=>getJSON(`${API}/summary?event=${g.id}`).catch(()=>null)));
-  const pl={},tgs=[];
-  for(const s of sums){
-    const tb=s?.boxscore?.players?.find(x=>String(x.team.id)===String(id));if(!tb)continue;
-    const tot={pts:0,reb:0,ast:0,to:0,stl:0,blk:0,fgm:0,fga:0,tpm:0,tpa:0};
+function parseSummary(s){
+  const pls=s?.boxscore?.players;if(!pls?.length)return null;
+  const out={t:{},p:{}};
+  for(const tb of pls){
+    const tid=String(tb.team.id),list=[];
+    const T={pts:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,orb:0,drb:0,reb:0,ast:0,stl:0,blk:0,to:0};
     for(const st of tb.statistics||[]){
       const L=st.labels||[];
       for(const a of st.athletes||[]){
@@ -214,38 +276,107 @@ async function loadTeam(id){
         const n=k=>parseFloat(g(k))||0;
         const pr=k=>String(g(k)||'0-0').split('-').map(x=>parseFloat(x)||0);
         const min=n('MIN');if(min<=0)continue;
-        const [fgm,fga]=pr('FG'),[tpm,tpa]=pr('3PT');
-        const o=pl[a.athlete.id]??={id:String(a.athlete.id),name:a.athlete.displayName,pos:a.athlete.position?.abbreviation||'',
-          gp:0,starts:0,min:0,pts:0,reb:0,ast:0,fgm:0,fga:0,tpm:0,tpa:0};
-        o.gp++;o.starts+=a.starter?1:0;o.min+=min;o.pts+=n('PTS');o.reb+=n('REB');o.ast+=n('AST');
-        o.fgm+=fgm;o.fga+=fga;o.tpm+=tpm;o.tpa+=tpa;
-        tot.pts+=n('PTS');tot.reb+=n('REB');tot.ast+=n('AST');tot.to+=n('TO');tot.stl+=n('STL');tot.blk+=n('BLK');
-        tot.fgm+=fgm;tot.fga+=fga;tot.tpm+=tpm;tot.tpa+=tpa;
+        const [fgm,fga]=pr('FG'),[tpm,tpa]=pr('3PT'),[ftm,fta]=pr('FT');
+        const o={id:String(a.athlete.id),name:a.athlete.displayName,pos:a.athlete.position?.abbreviation||'',st:a.starter?1:0,
+          min,pts:n('PTS'),reb:n('REB'),ast:n('AST'),stl:n('STL'),blk:n('BLK'),to:n('TO'),fgm,fga,tpm,tpa};
+        list.push(o);
+        T.pts+=o.pts;T.fgm+=fgm;T.fga+=fga;T.tpm+=tpm;T.tpa+=tpa;T.ftm+=ftm;T.fta+=fta;
+        T.orb+=n('OREB');T.drb+=n('DREB');T.reb+=o.reb;T.ast+=o.ast;T.stl+=o.stl;T.blk+=o.blk;T.to+=o.to;
       }
     }
-    tgs.push(tot);
+    if(T.orb+T.drb===0){T.orb=T.reb*LG.orb;T.drb=T.reb-T.orb}  // fallback kung walang OREB/DREB
+    out.t[tid]=T;out.p[tid]=list;
   }
-  const players=Object.values(pl).map(o=>({...o,mpg:o.min/o.gp,ppg:o.pts/o.gp,rpg:o.reb/o.gp,apg:o.ast/o.gp,
-    fgp:o.fga?o.fgm/o.fga*100:0,tpp:o.tpa?o.tpm/o.tpa*100:0}));
-  const k=tgs.length||1,sum=f=>tgs.reduce((s,x)=>s+x[f],0);
-  const team=tgs.length?{reb:sum('reb')/k,ast:sum('ast')/k,to:sum('to')/k,stl:sum('stl')/k,blk:sum('blk')/k,
-    fgp:sum('fga')?sum('fgm')/sum('fga')*100:0,tpp:sum('tpa')?sum('tpm')/sum('tpa')*100:0}:null;
-  return {players,team,sample:tgs.length};
+  return Object.keys(out.t).length===2?out:null;
+}
+const SUMC={};
+function getSummary(id){
+  return SUMC[id]??=(async()=>{
+    try{const c=localStorage.getItem('nbas:'+id);if(c)return JSON.parse(c)}catch(e){}
+    try{
+      const s=parseSummary(await getJSON(`${API}/summary?event=${id}`));
+      if(s){try{localStorage.setItem('nbas:'+id,JSON.stringify(s))}catch(e){}}
+      return s;
+    }catch(e){delete SUMC[id];return null}
+  })();
 }
 
-/* ---------- injuries + lineup ---------- */
+/* ---------- players + team advanced stats (huling SAMPLE laro) ---------- */
+const z=()=>({gp:0,st:0,min:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,tpm:0,tpa:0});
+const addP=(X,p)=>{X.gp++;X.st+=p.st;X.min+=p.min;X.pts+=p.pts;X.reb+=p.reb;X.ast+=p.ast;X.stl+=p.stl;X.blk+=p.blk;X.to+=p.to;X.fgm+=p.fgm;X.fga+=p.fga;X.tpm+=p.tpm;X.tpa+=p.tpa};
+const dv=(a,b)=>b?a/b:0;
+const ensure=id=>(PL[id]??=loadTeam(id).then(r=>{PL_N[id]=M[id]?.n;return r})
+  .catch(()=>({players:[],team:null,sample:0,depth:0})));
+async function loadTeam(id){
+  const gl=(M[id]?.g||[]).slice(-SAMPLE);
+  const n=gl.length;
+  const sums=await Promise.all(gl.map(g=>getSummary(g.id)));
+  const pl={};
+  const zt=()=>({pts:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,orb:0,drb:0,reb:0,ast:0,stl:0,blk:0,to:0});
+  const S={g:0,poss:0,m:zt(),o:zt()};
+  sums.forEach((s,i)=>{
+    if(!s||!s.t[id])return;
+    const oid=Object.keys(s.t).find(k=>k!==String(id));
+    const m=s.t[id],o=s.t[oid];if(!o)return;
+    S.g++;
+    for(const k in S.m){S.m[k]+=m[k];S.o[k]+=o[k]}
+    const pm=m.fga+0.44*m.fta-m.orb+m.to,po=o.fga+0.44*o.fta-o.orb+o.to;
+    S.poss+=(pm+po)/2;
+    const rec=i>=n-RECENT;
+    for(const p of s.p[id]||[]){
+      const q=pl[p.id]??={id:p.id,name:p.name,pos:'',A:z(),R:z(),last:-1};
+      addP(q.A,p);if(rec)addP(q.R,p);
+      q.last=i;if(p.pos)q.pos=p.pos;
+    }
+  });
+  // player stats: season-sample na hinaluan ng 40% bigat ng huling 5 laro
+  const players=Object.values(pl).map(q=>{
+    const A=q.A,R=q.R;
+    const bl=k=>{const a=A[k]/A.gp;return R.gp?0.6*a+0.4*R[k]/R.gp:a};
+    const o={id:q.id,name:q.name,pos:q.pos,gp:A.gp,starts:A.st,
+      mpg:bl('min'),ppg:bl('pts'),rpg:bl('reb'),apg:bl('ast'),spg:bl('stl'),bpg:bl('blk'),topg:bl('to'),
+      fgmg:bl('fgm'),fgag:bl('fga'),tpmg:bl('tpm'),tpag:bl('tpa'),missed:n-1-q.last};
+    o.fgp=o.fgag?o.fgmg/o.fgag*100:0;o.tpp=o.tpag?o.tpmg/o.tpag*100:0;
+    o.rank=R.st*3+A.st+o.mpg/100;
+    return o;
+  });
+  // team advanced
+  let team=null;const g=S.g;
+  if(g){
+    const m=S.m,o=S.o,P=S.poss;
+    team={gp:g,pace:P/g,ortg:dv(m.pts,P)*100,drtg:dv(o.pts,P)*100,
+      off:{efg:dv(m.fgm+.5*m.tpm,m.fga)*100,tov:dv(m.to,m.fga+.44*m.fta+m.to)*100,orb:dv(m.orb,m.orb+o.drb)*100,ftr:dv(m.ftm,m.fga)*100},
+      def:{efg:dv(o.fgm+.5*o.tpm,o.fga)*100,tov:dv(o.to,o.fga+.44*o.fta+o.to)*100,drb:dv(m.drb,m.drb+o.orb)*100,ftr:dv(o.ftm,o.fga)*100},
+      fgp:dv(m.fgm,m.fga)*100,tpp:dv(m.tpm,m.tpa)*100,oppTpp:dv(o.tpm,o.tpa)*100,tpa:m.tpa/g,missPG:(m.fga-m.fgm)/g,
+      reb:m.reb/g,ast:m.ast/g,to:m.to/g,stl:m.stl/g,blk:m.blk/g};
+    team.net=team.ortg-team.drtg;
+  }
+  return {players,team,sample:g,depth:players.filter(p=>p.mpg>=10).length};
+}
+
+/* ---------- injuries + lineup + returning ---------- */
 const SEV=s=>{s=(s||'').toLowerCase();if(s.includes('out'))return 1;if(s.includes('doubt'))return .8;
   if(s.includes('quest')||s.includes('day'))return .35;return 0};
 const injOf=t=>INJ[t.id]||INJ[t.name]||[];
+const impactOf=p=>Math.min(7,Math.max(0,(p.ppg+0.7*p.apg+0.7*p.rpg-8)*0.22));
 function injImpact(team){
   const list=injOf(team);const data=PL_DONE[team.id];let pts=0;const names=[];
+  const dm=data&&data.depth?clamp(1+(9-data.depth)*0.05,0.85,1.3):1;   // mababaw ang rotation = mas masakit ang injury
   for(const i of list){
     const sv=SEV(i.status);if(!sv)continue;
     const p=data?.players.find(x=>x.id===i.id||x.name===i.name);
-    if(p){
-      const v=Math.min(7,Math.max(0,(p.ppg+0.7*p.apg+0.7*p.rpg-8)*0.22))*sv;
-      pts+=v;if(v>0.5)names.push(`${i.name} (${i.status})`);
-    }
+    if(p){const v=impactOf(p)*sv*dm;pts+=v;if(v>0.5)names.push(`${i.name} (${i.status})`)}
+  }
+  return {pts,names};
+}
+function returning(team){
+  const d=PL_DONE[team.id];if(!d)return {pts:0,names:[]};
+  const inj=injOf(team);let pts=0;const names=[];
+  for(const p of d.players){
+    if(p.missed<2||p.missed>10||p.gp<3||p.mpg<18)continue;
+    if(inj.some(i=>(i.id===p.id||i.name===p.name)&&SEV(i.status)>0))continue;
+    const pen=Math.min(1,impactOf(p)*0.15);
+    if(pen>=0.15){pts+=pen;names.push(`${p.name} (di nakalaro ng ${p.missed} laro)`)}
   }
   return {pts,names};
 }
@@ -255,7 +386,7 @@ function lineup(id){
   const outL=list.filter(i=>SEV(i.status)>=.8),qL=list.filter(i=>SEV(i.status)>0&&SEV(i.status)<.8);
   const isOut=p=>outL.some(i=>i.id===p.id||i.name===p.name);
   const isQ=p=>qL.some(i=>i.id===p.id||i.name===p.name);
-  const rank=[...d.players].sort((a,b)=>b.starts-a.starts||b.mpg-a.mpg);
+  const rank=[...d.players].sort((a,b)=>b.rank-a.rank);
   const orig=rank.slice(0,5);
   const avail=rank.filter(p=>!isOut(p));
   const stArr=avail.slice(0,5);
@@ -264,59 +395,105 @@ function lineup(id){
   const removed=orig.filter(isOut);
   const added=stArr.filter(p=>!orig.some(o=>o.id===p.id));
   const bench=avail.filter(p=>!stIds.has(p.id)).sort((a,b)=>b.mpg-a.mpg);
-  const k=d.sample||1;
   const agg=arr=>{
     const s=f=>arr.reduce((x,p)=>x+p[f],0);
-    return {pts:s('pts')/k,reb:s('reb')/k,ast:s('ast')/k,min:s('min')/k,
-      fgp:s('fga')?s('fgm')/s('fga')*100:0,tpp:s('tpa')?s('tpm')/s('tpa')*100:0};
+    return {pts:s('ppg'),reb:s('rpg'),ast:s('apg'),min:s('mpg'),
+      fgp:s('fgag')?s('fgmg')/s('fgag')*100:0,tpp:s('tpag')?s('tpmg')/s('tpag')*100:0};
   };
   const S=agg(starters),B=agg(bench);
-  return {starters,bench,removed,added,isQ,outL,S,B,benchShare:(S.pts+B.pts)?B.pts/(S.pts+B.pts)*100:0,sample:d.sample};
+  return {starters,bench,removed,added,isQ,outL,S,B,benchShare:(S.pts+B.pts)?B.pts/(S.pts+B.pts)*100:0,sample:d.sample,depth:d.depth};
+}
+
+/* ---------- schedule / travel / fatigue ---------- */
+function fatigue(id,ev){
+  const prevs=allEvents().filter(e=>e.type!==1&&e.id!==ev.id&&e.date<ev.date&&(e.home.id===id||e.away.id===id))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const out={pts:0,tags:[],rest:null,b2b:false,trip:0,mi:0,tz:0,n4:1};
+  const last=prevs[prevs.length-1];
+  if(!last)return out;
+  const dd=e=>Math.round((Date.parse(ev.etDay)-Date.parse(e.etDay))/864e5);
+  out.rest=Math.max(0,dd(last)-1);out.b2b=dd(last)===1;
+  out.n4=prevs.filter(e=>dd(e)<=3).length+1;
+  const n6=prevs.filter(e=>dd(e)<=5).length+1;
+  let trip=0;
+  if(ev.away.id===id){trip=1;for(let i=prevs.length-1;i>=0&&prevs[i].away.id===id;i--)trip++}
+  out.trip=trip;
+  const a=LOC[last.home.abbr],b=LOC[ev.home.abbr];
+  if(a&&b){out.mi=miles(a,b);out.tz=b[2]-a[2]}
+  if(out.b2b)out.tags.push('back-to-back');
+  if(out.n4>=3){out.pts+=1;out.tags.push('3 laro sa 4 gabi')}
+  else if(n6>=4){out.pts+=.6;out.tags.push('4 laro sa 6 gabi')}
+  if(out.b2b&&out.mi>600){out.pts+=.5;out.tags.push(`${Math.round(out.mi)} mi biyahe sa back-to-back`)}
+  else if(out.mi>1500&&out.rest<=1){out.pts+=.4;out.tags.push(`${Math.round(out.mi)} mi biyahe`)}
+  if(trip>=4){out.pts+=Math.min(1.5,.35*(trip-3));out.tags.push(`road game #${trip} sa trip`)}
+  if(Math.abs(out.tz)>=2&&out.rest<=1){out.pts+=out.tz>0?.5:.3;out.tags.push(`timezone ${out.tz>0?'+':''}${out.tz}h`)}
+  return out;
+}
+
+/* ---------- style matchup ---------- */
+function styleEdge(X,Y,k){   // puntos na nakukuha ng X (offense) laban sa depensa ni Y
+  const c=v=>clamp(v,-1.5,1.5);
+  const t3=c(X.tpa*(Y.oppTpp-LG.tp*100)/100*3*0.5*k);
+  const rb=c(X.missPG*((100-Y.def.drb)-LG.orb*100)/100*1.1*0.5*k);
+  const tv=c(-(Y.def.tov-LG.tov*100)/100*X.pace*0.9*0.5*k);
+  return {t3,rb,tv};
 }
 
 /* ---------- prediction ---------- */
-function playedDays(id){
-  const s=new Set((M[id]?.g||[]).map(x=>x.day));
-  for(const e of allEvents())if(e.home.id===id||e.away.id===id)s.add(e.etDay);
-  return s;
-}
-function restOf(id,day){
-  const ds=[...playedDays(id)].filter(d=>d<day).sort();
-  if(!ds.length)return {b2b:false,d:null};
-  const diff=Math.round((Date.parse(day)-Date.parse(ds[ds.length-1]))/864e5);
-  return {b2b:diff===1,d:diff-1};
-}
 function predict(ev){
   const H=M[ev.home.id],A=M[ev.away.id];
   if(!H||!A)return null;
-  const rH=restOf(H.id,ev.etDay),rA=restOf(A.id,ev.etDay);
+  const fH=fatigue(H.id,ev),fA=fatigue(A.id,ev);
   const iH=injImpact(H),iA=injImpact(A);
+  const rtH=returning(H),rtA=returning(A);
+  const tH=PL_DONE[H.id]?.team,tA=PL_DONE[A.id]?.team;
   const h2hG=H.g.filter(x=>x.opp===A.id);
   const h2h=h2hG.length?h2hG.reduce((s,x)=>s+(x.home?x.m-HCA:x.m+HCA),0)/h2hG.length*0.1:0;
+  let eff=0,style=0,sd={t3:0,rb:0,tv:0};
+  if(tH&&tA){
+    const k=Math.min(tH.gp,tA.gp);
+    eff=clamp(0.25*(tH.net-tA.net)*k/(k+12),-3,3);
+    const ks=k/(k+10);
+    const eH=styleEdge(tH,tA,ks),eA=styleEdge(tA,tH,ks);
+    sd={t3:eH.t3-eA.t3,rb:eH.rb-eA.rb,tv:eH.tv-eA.tv};
+    style=clamp(sd.t3+sd.rb+sd.tv,-3,3);
+  }
+  const kH=H.hn/(H.hn+15),kA=A.rn/(A.rn+15);
+  const split=clamp(0.5*((H.hm-H.mavg)*kH-(A.rm-A.mavg)*kA),-2,2);
   const F={
     rating:H.str-A.str,
     home:HCA,
-    rest:(rA.b2b?2:0)-(rH.b2b?2:0),
+    rest:(fA.b2b?2:0)-(fH.b2b?2:0),
+    sched:fA.pts-fH.pts,
     form:0.12*(H.l10-A.l10),
     h2h,
-    inj:iA.pts-iH.pts
+    inj:iA.pts-iH.pts,
+    ret:rtA.pts-rtH.pts,
+    eff,style,split
   };
   const spread=Object.values(F).reduce((a,b)=>a+b,0);
   const p=1/(1+Math.exp(-spread*0.145));
-  const tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
+  let tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
+  if(tH&&tA){const pc=(tH.pace+tA.pace)/2;const t2=pc/100*((tH.ortg+tA.drtg)/2+(tA.ortg+tH.drtg)/2);tot=(tot+t2)/2}
   const hn=ev.home.abbr,an=ev.away.abbr;
   const T={
     rating:v=>`${v>0?hn:an} mas malakas sa ratings (${Math.abs(v).toFixed(1)} pts)`,
     home:()=>`Home court advantage ng ${hn}`,
     rest:v=>v>0?`${hn} ay fresh, ${an} ay back-to-back`:`${an} ay fresh, ${hn} ay back-to-back`,
+    sched:v=>v>0?`${an} pagod/biyahe: ${fA.tags.join(', ')||'schedule'}`:`${hn} pagod/biyahe: ${fH.tags.join(', ')||'schedule'}`,
     form:v=>`Mas maganda ang huling 10 games ng ${v>0?hn:an}`,
     h2h:v=>`${v>0?hn:an} ang lamang sa head-to-head ngayong season`,
-    inj:v=>v>0?`May injury sa ${an}${iA.names.length?': '+iA.names.join(', '):''}`:`May injury sa ${hn}${iH.names.length?': '+iH.names.join(', '):''}`
+    inj:v=>v>0?`May injury sa ${an}${iA.names.length?': '+iA.names.join(', '):''}`:`May injury sa ${hn}${iH.names.length?': '+iH.names.join(', '):''}`,
+    ret:v=>v>0?`${an} may bumabalik galing absence: ${rtA.names.join(', ')}`:`${hn} may bumabalik galing absence: ${rtH.names.join(', ')}`,
+    eff:v=>`${v>0?hn:an} mas maganda ang net rating per 100 possessions`,
+    style:v=>`Mas paborable ang style matchup para sa ${v>0?hn:an}`,
+    split:v=>v>0?`${hn} mas malakas sa bahay`:`${an} mas malakas sa road`
   };
-  const labels={rating:'Overall rating (Elo + efficiency)',home:'Home court',rest:'Rest / back-to-back',form:'Recent form (L10)',h2h:'Head-to-head',inj:'Injuries / lineup'};
+  const labels={rating:'Overall rating (Elo + SRS)',home:'Home court',rest:'Back-to-back',sched:'Travel / fatigue',form:'Recent form (L10)',
+    h2h:'Head-to-head',inj:'Injuries / lineup',ret:'Bumabalik galing absence',eff:'Efficiency (net rtg/100)',style:'Style matchup',split:'Home/road split'};
   const reasons=Object.entries(F).filter(([k,v])=>Math.abs(v)>=0.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))
     .map(([k,v])=>T[k](v));
-  return {p,spread,F,labels,reasons,sH:(tot+spread)/2,sA:(tot-spread)/2,rH,rA,iH,iA};
+  return {p,spread,F,labels,reasons,sH:(tot+spread)/2,sA:(tot-spread)/2,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA};
 }
 
 /* ---------- UI ---------- */
@@ -340,13 +517,15 @@ function cardHTML(ev){
     const pH=Math.round(p.p*100),pA=100-pH,fav=pH>=50?h:a,sp=Math.abs(p.spread);
     mid=`<div class="pbar"><i style="width:${pA}%;background:${a.color}"></i><i style="width:${pH}%;background:${h.color}"></i></div>
     <div class="pl"><span>${a.abbr} ${pA}%</span><span>${h.abbr} ${pH}%</span></div>
-    <div class="pick">${ev.state==='pre'?'Pick':'Pre-game pick'}: <b>${fav.name}</b> (${fav.abbr} -${sp.toFixed(1)}) · Predicted: ${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</div>
+    <div class="pick">${ev.state==='pre'?'Pick':'Pre-game pick'}: <b>${fav.name}</b> (${fav.abbr} -${sp.toFixed(1)}) · Predicted: ${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)} · Total ${Math.round(p.tot)}</div>
     <ul class="why">${p.reasons.slice(0,3).map(r=>`<li>${r}</li>`).join('')||'<li>Halos pantay ang dalawang team</li>'}</ul>`;
   }else mid='<div class="pick">Walang sapat na data para sa prediction.</div>';
-  const status=ev.state==='post'?`<span class="final">FINAL</span>`
+  const tk=TK[ev.id];let mark='';
+  if(ev.state==='post'&&tk){const ok=(tk.ph>=.5)===(h.score>a.score);mark=`<span class="mk ${ok?'ok':'no'}">${ok?'✓ tama':'✗ mali'}</span> `}
+  const status=ev.state==='post'?`${mark}<span class="final">FINAL</span>`
     :ev.state==='in'?`<span class="live"><i class="dot"></i>LIVE · ${ev.detail}</span>`:'';
   return `<div class="card ${ev.state==='in'?'isLive':''}" onclick="openDetail('${ev.id}')">
-    <div class="top"><span>${manila(ev.date)}</span>${status}</div>
+    <div class="top"><span>${manila(ev.date)}</span><span>${status}</span></div>
     <div class="teams">
       <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
       <div class="at">@</div>
@@ -369,13 +548,18 @@ function setStatus(extra){
   if(extra!==undefined)STATUS_BASE=extra;
   $('#status').textContent=STATUS_BASE;
 }
-async function selectDay(i){
-  CUR=i;renderTabs();renderGrid();
+async function loadDayTeams(i){
   const evs=evsOn(DAYS[i]);
   const ids=[...new Set(evs.flatMap(e=>[e.home.id,e.away.id]))];
-  setStatus('Kinukuha ang lineup at injury data…');
   await Promise.all(ids.map(async id=>{PL_DONE[id]=await ensure(id)}));
-  if(CUR===i){renderGrid();setStatus(`Tapos na. ${evs.length} laro sa petsang ito (Manila time). Huling live update: ${manilaTime(new Date())}`)}
+  return evs;
+}
+async function selectDay(i){
+  CUR=i;renderTabs();renderGrid();
+  setStatus('Kinukuha ang boxscores, lineup at injury data… (mas matagal ang unang load, naka-cache na pagkatapos)');
+  const evs=await loadDayTeams(i);
+  recordAll();
+  if(CUR===i){renderGrid();renderTracker();setStatus(`Tapos na. ${evs.length} laro sa petsang ito (Manila time). Huling live update: ${manilaTime(new Date())}`)}
 }
 
 /* ---------- live refresh ---------- */
@@ -384,13 +568,20 @@ const signature=()=>evsOn(DAYS[CUR]).map(e=>e.id+e.state+e.away.score+'-'+e.home
 async function refreshLive(){
   if(document.hidden||!DAYS.length)return;
   try{
+    TICK++;
     const todayET=fmtET(new Date());
-    await Promise.all([addDays(todayET,-1),todayET,addDays(todayET,1),addDays(todayET,2)].map(loadDay));
-    const n=rebuildModel();
+    const jobs=[addDays(todayET,-1),todayET,addDays(todayET,1),addDays(todayET,2)].map(loadDay);
+    const injTick=TICK%30===0;   // kada ~10 minuto
+    if(injTick)jobs.push(loadInj().then(x=>{if(Object.keys(x).length)INJ=x}));
+    await Promise.all(jobs);
+    rebuildModel();
+    let stale=false;
+    for(const id in PL_N)if(M[id]&&M[id].n!==PL_N[id]){stale=true;delete PL[id];delete PL_DONE[id];delete PL_N[id]}
+    if(stale)await loadDayTeams(CUR);
+    recordAll();
     const sig=signature();
-    if(sig!==LASTSIG){LASTSIG=sig;renderGrid();}
-    renderTabs();
-    // i-update ang live score sa loob ng bukas na modal
+    if(sig!==LASTSIG||stale||injTick){LASTSIG=sig;renderGrid();}
+    renderTabs();renderTracker();
     allEvents().forEach(e=>{const el=document.getElementById('lv-'+e.id);if(el)el.innerHTML=liveLine(e)});
     const base=STATUS_BASE.replace(/ Huling live update:.*$/,'');
     STATUS_BASE=base+` Huling live update: ${manilaTime(new Date())}`;
@@ -407,6 +598,25 @@ const pRow=(p,q)=>`<tr><td><span class="pos">${p.pos}</span><b>${p.name}</b>${q?
   <td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td><td>${p.fgp.toFixed(0)}%</td><td>${p.tpp.toFixed(0)}%</td></tr>`;
 const pHead=`<tr><th>Player</th><th>MIN</th><th>PPG</th><th>RPG</th><th>APG</th><th>FG%</th><th>3P%</th></tr>`;
 const qTag=(L,p)=>L.isQ(p)?'Questionable':'';
+const tags=(arr,cls)=>arr.length?arr.map(t=>`<span class="tag ${cls||''}">${t}</span>`).join(''):'<span class="tag">Walang flag</span>';
+
+// rows: [label, awayVal, homeVal, hi(1=mas mataas mas maganda, 0=mas mababa mas maganda, -1=neutral), decimals]
+function cmpHTML(rows){
+  let aw=0,hw=0;
+  const html=rows.map(([l,av,hv,hi,dec])=>{
+    dec=dec??1;
+    const better=hi===-1?'':hi?(av>hv?'a':av<hv?'h':''):(av<hv?'a':av>hv?'h':'');
+    if(better==='a')aw++;if(better==='h')hw++;
+    const up=hi!==0;
+    let sa=up?av:1/Math.max(av,.1),sh=up?hv:1/Math.max(hv,.1);
+    if(up&&(av<0||hv<0)){sa=av+50;sh=hv+50}
+    const tt=(sa+sh)||1,wa=sa/tt*100,wh=sh/tt*100;
+    return `<div class="cmp"><span class="v ${better==='a'?'w-txt':''}">${av.toFixed(dec)}</span>
+      <div class="bar a"><i class="${better==='a'?'w':''}" style="width:${wa}%"></i></div><span class="l">${l}</span>
+      <div class="bar"><i class="${better==='h'?'w':''}" style="width:${wh}%"></i></div><span class="v r ${better==='h'?'w-txt':''}">${hv.toFixed(dec)}</span></div>`;
+  }).join('');
+  return {html,aw,hw,n:rows.filter(r=>r[3]!==-1).length};
+}
 
 async function openTeam(tid,evId){
   const ev=findEv(evId);
@@ -417,13 +627,17 @@ async function openTeam(tid,evId){
   if(oppId)PL_DONE[oppId]=await ensure(oppId);
   const L=lineup(tid),O=oppId?lineup(oppId):null;
   if(!T||!L){$('#mbody').innerHTML='<p>Walang sapat na player data.</p>';return}
+  const tt=PL_DONE[tid].team,rt=returning(T);
   let html=`${ev?`<button class="back" onclick="openDetail('${evId}')">← Balik sa laro</button>`:''}
-  <h1 style="font-size:20px">${img(T.logo).replace('<img','<img style="width:34px;height:34px;vertical-align:middle;margin-right:8px"')}${T.name} <span class="sub">(${T.w}-${T.l})</span></h1>
-  <div class="sub">Base sa huling ${L.sample} laro · PPG ng team: ${T.pf.toFixed(1)} · Opp: ${T.pa.toFixed(1)}</div>`;
+  <h1 style="font-size:20px">${img(T.logo).replace('<img','<img style="width:34px;height:34px;vertical-align:middle;margin-right:8px;display:inline-block"')}${T.name} <span class="sub">(${T.w}-${T.l})</span></h1>
+  <div class="sub">Player stats: huling ${L.sample} laro, may dagdag na bigat sa huling ${RECENT} · PPG ng team: ${T.pf.toFixed(1)} · Opp: ${T.pa.toFixed(1)}</div>
+  ${tt?`<div class="sub">ORtg ${tt.ortg.toFixed(1)} · DRtg ${tt.drtg.toFixed(1)} · Net ${f1(tt.net)} · Pace ${tt.pace.toFixed(1)} · Rotation: ${L.depth} players na ≥10 MPG</div>`:''}
+  <div class="sub">Home ${T.hw}-${T.hn-T.hw} (${f1(T.hm)}) · Road ${T.rw}-${T.rn-T.rw} (${f1(T.rm)}) · Close games ${T.cw}-${T.cl} · SOS ${f1(T.sos)}</div>`;
   if(L.removed.length||L.added.length){
     html+=`<div class="note">⚠️ Hindi kasama sa lineup: ${L.outL.length?L.outL.map(i=>`<b class="o">${i.name}</b> (${i.status})`).join(', '):'—'}.
     ${L.added.length?`Pumalit sa starting 5: <b>${L.added.map(p=>p.name).join(', ')}</b>.`:''}</div>`;
   }
+  if(rt.names.length)html+=`<div class="note">↩️ Bumabalik galing absence: ${rt.names.join(', ')}. Baka may minutes limit.</div>`;
   html+=`<h2>Possible starting 5</h2><table class="num">${pHead}${L.starters.map(p=>pRow(p,qTag(L,p))).join('')}</table>
   <div class="pick">Total ng starters: <b>${L.S.pts.toFixed(1)} PTS</b> · ${L.S.reb.toFixed(1)} REB · ${L.S.ast.toFixed(1)} AST · ${L.S.fgp.toFixed(0)}% FG · ${L.S.tpp.toFixed(0)}% 3P (per game)</div>`;
   html+=`<h2>Bench</h2>${L.bench.length?`<table class="num">${pHead}${L.bench.slice(0,9).map(p=>pRow(p,qTag(L,p))).join('')}</table>`:'<div class="sub">Walang bench data.</div>'}
@@ -447,15 +661,15 @@ async function openDetail(id){
   if(!p){$('#mbody').innerHTML='<p>Walang sapat na data.</p>';return}
   const LH=lineup(h.id),LA=lineup(a.id);
   const pHp=Math.round(p.p*100),pAp=100-pHp;
-  let html=`<h1 style="font-size:20px">${a.name} <span class="side">AWAY</span> @ ${h.name} <span class="side home">HOME</span></h1>
+  let html=`<h1 style="font-size:20px">${a.name} <span class="side inl">AWAY</span> @ ${h.name} <span class="side home inl">HOME</span></h1>
   <div class="sub">${manila(ev.date)} (Manila)</div>
   <div id="lv-${id}">${liveLine(ev)}</div>
   <div style="margin:8px 0"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr} lineup & bench</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr} lineup & bench</button></div>
   <div class="pbar" style="height:14px"><i style="width:${pAp}%;background:${a.color}"></i><i style="width:${pHp}%;background:${h.color}"></i></div>
   <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
-  <div class="pick">Predicted score: <b>${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</b> · Spread (home): ${f1(p.spread)}</div>
+  <div class="pick">Predicted score: <b>${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</b> · Total ${p.tot.toFixed(0)} · Spread (home): ${f1(p.spread)}</div>
   <h2>Breakdown ng prediction (puntos para sa ${h.abbr})</h2>
-  <table>${Object.entries(p.F).map(([k,v])=>`<tr><td>${p.labels[k]}</td><td style="text-align:right;color:${v>0?'var(--ok)':v<0?'var(--bad)':'var(--mut)'}">${f1(v)}</td></tr>`).join('')}</table>`;
+  <table>${Object.entries(p.F).map(([k,v])=>`<tr><td>${p.labels[k]}</td><td style="text-align:right;color:${v>0.05?'var(--ok)':v<-0.05?'var(--bad)':'var(--mut)'}">${f1(v)}</td></tr>`).join('')}</table>`;
 
   const row=(x,y,Lx,Ly)=>{
     const sc=q=>q?q.ppg+q.rpg+q.apg:0,aw=sc(x)>sc(y);
@@ -477,42 +691,74 @@ async function openDetail(id){
       <div class="pick ${LA.B.pts>LH.B.pts?'hl':''}"><b>${a.abbr}</b><div class="big">${LA.B.pts.toFixed(1)} PTS</div><div class="sub">${LA.benchShare.toFixed(0)}% ng team points</div></div>
       <div class="pick ${LH.B.pts>LA.B.pts?'hl':''}"><b>${h.abbr}</b><div class="big">${LH.B.pts.toFixed(1)} PTS</div><div class="sub">${LH.benchShare.toFixed(0)}% ng team points</div></div>
     </div>
-    <div class="sub" style="margin-top:6px">I-click ang button sa taas para makita ang buong bench ng bawat team.</div>`;
+    <div class="sub" style="margin-top:6px">I-click ang button sa taas para makita ang buong bench ng bawat team. Player stats = average ng huling ${Math.max(pA.sample,pH.sample)} laro, may 40% bigat ang huling ${RECENT}.</div>`;
   }else html+=`<div class="sub">Hindi pa kumpleto ang lineup data.</div>`;
 
   const injList=t=>{const l=injOf(t);
     return l.length?l.map(i=>`<div><b class="${SEV(i.status)>=.8?'o':'q'}">${i.status}</b> ${i.name}${i.note?' – '+i.note:''}</div>`).join(''):'<div>Walang naka-report.</div>'};
   html+=`<h2>Injury report</h2><div class="two inj"><div><b>${a.abbr}</b>${injList(a)}</div><div><b>${h.abbr}</b>${injList(h)}</div></div>`;
 
+  // basic team stats
   const aT=pA.team,hT=pH.team;
   const rows=[['PPG',A.pf,H.pf,1],['Opp PPG',A.pa,H.pa,0],['Net',A.net,H.net,1],['L10 net',A.l10,H.l10,1],['Rating',A.str,H.str,1]];
   if(aT&&hT)rows.push(['FG%',aT.fgp,hT.fgp,1],['3P%',aT.tpp,hT.tpp,1],['REB',aT.reb,hT.reb,1],['AST',aT.ast,hT.ast,1],
     ['TO',aT.to,hT.to,0],['STL',aT.stl,hT.stl,1],['BLK',aT.blk,hT.blk,1]);
   if(LA&&LH)rows.push(['Bench PTS',LA.B.pts,LH.B.pts,1]);
-  let aw=0,hw=0;
-  const cmp=rows.map(([l,av,hv,hi])=>{
-    const better=hi?(av>hv?'a':av<hv?'h':''):(av<hv?'a':av>hv?'h':'');
-    if(better==='a')aw++;if(better==='h')hw++;
-    let sa=hi?av:1/Math.max(av,.1),sh=hi?hv:1/Math.max(hv,.1);
-    if(hi&&(av<0||hv<0)){sa=av+50;sh=hv+50}
-    const tot=(sa+sh)||1,wa=sa/tot*100,wh=sh/tot*100;
-    return `<div class="cmp"><span class="v ${better==='a'?'w-txt':''}">${av.toFixed(1)}</span>
-      <div class="bar a"><i class="${better==='a'?'w':''}" style="width:${wa}%"></i></div><span class="l">${l}</span>
-      <div class="bar"><i class="${better==='h'?'w':''}" style="width:${wh}%"></i></div><span class="v r ${better==='h'?'w-txt':''}">${hv.toFixed(1)}</span></div>`;
-  }).join('');
-  const lead=aw>hw?a.abbr:hw>aw?h.abbr:null;
-  html+=`<h2>Team stats — ${a.abbr} vs ${h.abbr}</h2>${cmp}
-  <div class="pick">${lead?`Lamang ang <b>${lead}</b> sa ${Math.max(aw,hw)} sa ${rows.length} categories`:'Pantay ang dalawa sa stats'}</div>
+  const C1=cmpHTML(rows);
+  const lead=C1.aw>C1.hw?a.abbr:C1.hw>C1.aw?h.abbr:null;
+  html+=`<h2>Team stats — ${a.abbr} vs ${h.abbr}</h2>${C1.html}
+  <div class="pick">${lead?`Lamang ang <b>${lead}</b> sa ${Math.max(C1.aw,C1.hw)} sa ${C1.n} categories`:'Pantay ang dalawa sa stats'}</div>
   <div class="sub" style="margin-top:4px">PPG/Net/Rating = buong season. Iba pa = average ng huling ${Math.max(pA.sample,pH.sample)} laro.</div>`;
+
+  // four factors + efficiency
+  if(aT&&hT){
+    const C2=cmpHTML([
+      ['ORtg',aT.ortg,hT.ortg,1],['DRtg',aT.drtg,hT.drtg,0],['Net rtg',aT.net,hT.net,1],['Pace',aT.pace,hT.pace,-1],
+      ['eFG%',aT.off.efg,hT.off.efg,1],['eFG% allowed',aT.def.efg,hT.def.efg,0],
+      ['TOV%',aT.off.tov,hT.off.tov,0],['Forced TOV%',aT.def.tov,hT.def.tov,1],
+      ['ORB%',aT.off.orb,hT.off.orb,1],['DRB%',aT.def.drb,hT.def.drb,1],
+      ['FT/FGA',aT.off.ftr,hT.off.ftr,1],['Opp FT/FGA',aT.def.ftr,hT.def.ftr,0]]);
+    const lead2=C2.aw>C2.hw?a.abbr:C2.hw>C2.aw?h.abbr:null;
+    html+=`<h2>Four Factors & efficiency (per 100 possessions)</h2>${C2.html}
+    <div class="pick">${lead2?`Lamang ang <b>${lead2}</b> sa ${Math.max(C2.aw,C2.hw)} sa ${C2.n} categories`:'Pantay'}</div>
+    <div class="sub" style="margin-top:4px">Berde = mas maganda. Ang TOV% at depensa (allowed) ay mas mababa = mas maganda. Pace-adjusted ang ORtg/DRtg.</div>`;
+
+    // style matchup
+    const sd=p.sd;
+    const c=v=>`<td style="text-align:right;color:${v>0.05?'var(--ok)':v<-0.05?'var(--bad)':'var(--mut)'}">${f1(v)}</td>`;
+    const dp=Math.abs(aT.pace-hT.pace);
+    html+=`<h2>Style matchup (puntos para sa ${h.abbr})</h2><table>
+      <tr><td>3-point shooting vs depensa<div class="sub">${a.abbr}: ${aT.tpa.toFixed(0)} 3PA @ ${aT.tpp.toFixed(0)}% (nakakapayag ng ${aT.oppTpp.toFixed(0)}%) · ${h.abbr}: ${hT.tpa.toFixed(0)} 3PA @ ${hT.tpp.toFixed(0)}% (nakakapayag ng ${hT.oppTpp.toFixed(0)}%)</div></td>${c(sd.t3)}</tr>
+      <tr><td>Rebounding (offensive boards vs depensa)<div class="sub">ORB%: ${a.abbr} ${aT.off.orb.toFixed(0)}% · ${h.abbr} ${hT.off.orb.toFixed(0)}% · DRB%: ${a.abbr} ${aT.def.drb.toFixed(0)}% · ${h.abbr} ${hT.def.drb.toFixed(0)}%</div></td>${c(sd.rb)}</tr>
+      <tr><td>Turnovers (ball security vs pressure)<div class="sub">TOV%: ${a.abbr} ${aT.off.tov.toFixed(1)}% · ${h.abbr} ${hT.off.tov.toFixed(1)}% · Forced: ${a.abbr} ${aT.def.tov.toFixed(1)}% · ${h.abbr} ${hT.def.tov.toFixed(1)}%</div></td>${c(sd.tv)}</tr>
+    </table>
+    <div class="sub" style="margin-top:4px">Pace: ${a.abbr} ${aT.pace.toFixed(1)} vs ${h.abbr} ${hT.pace.toFixed(1)}${dp>=3?` · <span class="q">Pace mismatch (${dp.toFixed(1)}), ang mas mabilis na team ang makikinabang kapag mabilis ang laro</span>`:' · Magkalapit ang pace'}</div>`;
+  }
+
+  // schedule / travel
+  const fl=(f,t)=>`<div><b>${t.abbr}</b> · ${f.rest==null?'walang prev game':f.b2b?'<span class="o">back-to-back</span>':f.rest+' araw pahinga'} · ${f.n4} laro sa 4 gabi${f.trip?` · road game #${f.trip}`:''}${f.mi?` · biyahe ${Math.round(f.mi)} mi`:''}${f.tz?` · timezone ${f.tz>0?'+':''}${f.tz}h`:''}<div>${tags(f.tags,'bad')}</div></div>`;
+  html+=`<h2>Schedule & travel</h2><div class="two inj">${fl(p.fA,a)}${fl(p.fH,h)}</div>`;
+
+  // splits, sos, clutch, depth, returning
+  const sp=(t,tm)=>`Home ${t.hw}-${t.hn-t.hw} (${f1(t.hm)}) · Road ${t.rw}-${t.rn-t.rw} (${f1(t.rm)})`;
+  html+=`<h2>Splits, schedule strength, clutch, rotation</h2>
+  <table><tr><th></th><th>${a.abbr} (Away)</th><th>${h.abbr} (Home)</th></tr>
+    <tr><td>Home / Road</td><td class="${A.rn?'hl':''}">${sp(A)}</td><td class="hl">${sp(H)}</td></tr>
+    <tr><td>Strength of schedule</td><td>${f1(A.sos)}</td><td>${f1(H.sos)}</td></tr>
+    <tr><td>Close games (≤5 pts)</td><td>${A.cw}-${A.cl}</td><td>${H.cw}-${H.cl}</td></tr>
+    <tr><td>Rotation (≥10 MPG)</td><td>${pA.depth||'—'} players</td><td>${pH.depth||'—'} players</td></tr>
+    <tr><td>Bumabalik galing absence</td><td>${p.rtA.names.join(', ')||'—'}</td><td>${p.rtH.names.join(', ')||'—'}</td></tr>
+  </table>
+  <div class="sub" style="margin-top:4px">Ang close-game record ay madalas swerte lang, kaya hindi ito ginagamit sa prediction. Ang SOS ay avg rating ng mga nakalaban na.</div>`;
 
   const chips=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
   html+=`<h2>Huling 10 laro</h2><div class="two"><div><b>${a.abbr}</b> (${A.w}-${A.l})${chips(A)}</div><div><b>${h.abbr}</b> (${H.w}-${H.l})${chips(H)}</div></div>`;
-  html+=`<div class="sub" style="margin-top:12px">Rest: ${a.abbr} ${p.rA.d==null?'—':p.rA.b2b?'back-to-back':p.rA.d+' araw pahinga'} · ${h.abbr} ${p.rH.d==null?'—':p.rH.b2b?'back-to-back':p.rH.d+' araw pahinga'}</div>`;
   $('#mbody').innerHTML=html;
 }
 
 /* ---------- init ---------- */
 (async function init(){
+  renderTracker();
   setStatus('Kinukuha ang schedule at resulta…');
   try{
     const now=new Date();
@@ -522,7 +768,7 @@ async function openDetail(id){
     const [prior,inj]=await Promise.all([loadPrior(),loadInj(),Promise.all(all.map(loadDay))]);
     PRIOR=prior;INJ=inj;
     const n=rebuildModel();
-    CUR=0;renderTabs();renderGrid();LASTSIG=signature();
+    CUR=0;renderTabs();renderGrid();LASTSIG=signature();renderTracker();
     setStatus(`${n} natapos na laro ang ginamit sa ratings.`);
     selectDay(0);
     setInterval(refreshLive,REFRESH_MS);
