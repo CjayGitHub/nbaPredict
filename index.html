@@ -20,7 +20,8 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 .card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
 .top{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-bottom:10px}
 .teams{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.tm{flex:1;text-align:center}
+.tm{flex:1;text-align:center;border-radius:10px;padding:4px}
+.tm:hover{background:var(--card2)}
 .tm img{width:48px;height:48px;object-fit:contain}
 .tm b{display:block;font-size:16px}
 .tm small{color:var(--mut)}
@@ -36,13 +37,17 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 #modal.show{display:flex}
 .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px;width:min(880px,100%);padding:18px;position:relative}
 .x{position:absolute;right:12px;top:10px;background:none;border:0;color:var(--tx);font-size:24px;cursor:pointer}
+.back{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;margin-bottom:10px}
+.tbtn{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:700;margin-right:6px}
+.tbtn:hover{border-color:#3b5bdb}
 h2{font-size:15px;margin:20px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 table{width:100%;border-collapse:collapse}
-td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle;text-align:left}
 .pp{width:50%}
 .pp small{color:var(--mut);display:block}
 .hl{background:#3ddc9718}
 .pos{display:inline-block;min-width:26px;color:var(--mut);font-size:11px}
+.num td,.num th{text-align:right}.num td:first-child,.num th:first-child{text-align:left}
 .cmp{display:grid;grid-template-columns:60px 1fr 120px 1fr 60px;gap:6px;align-items:center;padding:4px 0;font-size:13px}
 .cmp .l{text-align:center;color:var(--mut);font-size:12px}
 .cmp .bar{height:8px;background:var(--line);border-radius:9px;display:flex}
@@ -55,8 +60,10 @@ td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px;vertica
 .chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
 .chip.W{background:#3ddc9730;color:var(--ok)}.chip.L{background:#ff6b6b30;color:var(--bad)}
 .inj{font-size:12px;color:var(--mut)}
-.inj b.o{color:var(--bad)}.inj b.q{color:var(--warn)}
+.inj b.o,.o{color:var(--bad)}.inj b.q,.q{color:var(--warn)}
+.note{font-size:12px;padding:8px 10px;border-radius:10px;background:#ffb84d18;border:1px solid #ffb84d55;margin:6px 0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{font-size:22px;font-weight:800}
 @media(max-width:560px){.two{grid-template-columns:1fr}.cmp{grid-template-columns:44px 1fr 80px 1fr 44px}}
 footer{padding:0 16px 30px;color:var(--mut);font-size:11px}
 </style>
@@ -69,15 +76,15 @@ footer{padding:0 16px 30px;color:var(--mut);font-size:11px}
 <nav id="tabs"></nav>
 <div id="status"></div>
 <main id="grid"></main>
-<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro.</footer>
+<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro, at hindi kasama ang mga Out/Doubtful.</footer>
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
 
 <script>
 const API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const API2='https://site.api.espn.com/apis/v2/sports/basketball/nba';
 const SEASON_START='2026-10-15';
-const PRIOR_SEASON=2026;          // ESPN: 2026 = 2025-26 season
-const HCA=2.5;                    // home court advantage (pts)
+const PRIOR_SEASON=2026;
+const HCA=2.5;
 const $=s=>document.querySelector(s);
 const fmtET=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const ymd=s=>s.replace(/-/g,'');
@@ -86,6 +93,7 @@ const getJSON=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status
 const f1=x=>(x>=0?'+':'')+x.toFixed(1);
 
 let SCHED={}, M={}, INJ={}, PL={}, PRIOR={}, CUR=1, DAYS=[];
+const PL_DONE={};
 
 /* ---------- parsing ---------- */
 const tm=x=>({id:String(x.team.id),abbr:x.team.abbreviation,name:x.team.displayName,logo:x.team.logo,
@@ -108,7 +116,7 @@ async function loadPrior(){
       (n.standings?.entries||[]).forEach(e=>{
         const st={};(e.stats||[]).forEach(s=>st[s.name]=s.value);
         let d=st.differential??st.pointDifferential??st.pointsDiff;const gp=st.gamesPlayed||82;
-        if(d!=null)out[String(e.team.id)]=(Math.abs(d)>25?d/gp:d)*0.6; // regress to mean
+        if(d!=null)out[String(e.team.id)]=(Math.abs(d)>25?d/gp:d)*0.6;
       });
       (n.children||[]).forEach(walk);
     };
@@ -126,7 +134,7 @@ async function loadInj(){
   }catch(e){return {}}
 }
 
-/* ---------- ratings (SRS + Elo + prior) ---------- */
+/* ---------- ratings ---------- */
 function buildModel(games){
   const T={};
   const get=t=>T[t.id]??={id:t.id,abbr:t.abbr,name:t.name,logo:t.logo,color:t.color,g:[],prior:PRIOR[t.id]??0};
@@ -137,7 +145,6 @@ function buildModel(games){
     A.g.push({id:g.id,day:g.etDay,opp:H.id,home:false,pf:g.away.score,pa:g.home.score,m:-m});
   }
   const ids=Object.keys(T);
-  // opponent-adjusted margin (SRS)
   let r={};ids.forEach(i=>r[i]=0);
   for(let it=0;it<30;it++){
     const nr={};
@@ -145,7 +152,6 @@ function buildModel(games){
       nr[i]=t.g.length?t.g.reduce((s,x)=>s+(x.m-(x.home?HCA:-HCA))+(r[x.opp]||0),0)/t.g.length:0;}
     r=nr;
   }
-  // Elo with margin-of-victory
   const elo={};ids.forEach(i=>elo[i]=1500+T[i].prior*25);
   for(const g of games){
     const h=g.home.id,a=g.away.id,m=g.home.score-g.away.score;
@@ -167,7 +173,7 @@ function buildModel(games){
   return T;
 }
 
-/* ---------- players / lineups (from boxscores of last 5 games) ---------- */
+/* ---------- players (boxscores ng huling 5 laro) ---------- */
 const POSORD={PG:1,G:1.5,SG:2,SF:3,F:3.5,PF:4,C:5};
 const ensure=id=>(PL[id]??=loadTeam(id));
 async function loadTeam(id){
@@ -198,21 +204,18 @@ async function loadTeam(id){
   }
   const players=Object.values(pl).map(o=>({...o,mpg:o.min/o.gp,ppg:o.pts/o.gp,rpg:o.reb/o.gp,apg:o.ast/o.gp,
     fgp:o.fga?o.fgm/o.fga*100:0,tpp:o.tpa?o.tpm/o.tpa*100:0}));
-  const starters=[...players].sort((a,b)=>b.starts-a.starts||b.mpg-a.mpg).slice(0,5)
-    .sort((a,b)=>(POSORD[a.pos]||9)-(POSORD[b.pos]||9));
   const k=tgs.length||1,sum=f=>tgs.reduce((s,x)=>s+x[f],0);
   const team=tgs.length?{reb:sum('reb')/k,ast:sum('ast')/k,to:sum('to')/k,stl:sum('stl')/k,blk:sum('blk')/k,
     fgp:sum('fga')?sum('fgm')/sum('fga')*100:0,tpp:sum('tpa')?sum('tpm')/sum('tpa')*100:0}:null;
-  return {players,starters,team,sample:tgs.length};
+  return {players,team,sample:tgs.length};
 }
 
-/* ---------- injuries ---------- */
+/* ---------- injuries + lineup ---------- */
 const SEV=s=>{s=(s||'').toLowerCase();if(s.includes('out'))return 1;if(s.includes('doubt'))return .8;
   if(s.includes('quest')||s.includes('day'))return .35;return 0};
+const injOf=t=>INJ[t.id]||INJ[t.name]||[];
 function injImpact(team){
-  const list=INJ[team.id]||INJ[team.name]||[];const pl=PL[team.id];
-  if(!pl||!pl.then){} // placeholder
-  const data=PL_DONE[team.id];let pts=0;const names=[];
+  const list=injOf(team);const data=PL_DONE[team.id];let pts=0;const names=[];
   for(const i of list){
     const sv=SEV(i.status);if(!sv)continue;
     const p=data?.players.find(x=>x.id===i.id||x.name===i.name);
@@ -223,7 +226,31 @@ function injImpact(team){
   }
   return {pts,names};
 }
-const PL_DONE={};
+// Projected lineup: tinatanggal ang Out/Doubtful, pumapalit ang susunod na pinakamadalas mag-start
+function lineup(id){
+  const d=PL_DONE[id],t=M[id];if(!d||!t)return null;
+  const list=injOf(t);
+  const outL=list.filter(i=>SEV(i.status)>=.8),qL=list.filter(i=>SEV(i.status)>0&&SEV(i.status)<.8);
+  const isOut=p=>outL.some(i=>i.id===p.id||i.name===p.name);
+  const isQ=p=>qL.some(i=>i.id===p.id||i.name===p.name);
+  const rank=[...d.players].sort((a,b)=>b.starts-a.starts||b.mpg-a.mpg);
+  const orig=rank.slice(0,5);
+  const avail=rank.filter(p=>!isOut(p));
+  const stArr=avail.slice(0,5);
+  const stIds=new Set(stArr.map(p=>p.id));
+  const starters=[...stArr].sort((a,b)=>(POSORD[a.pos]||9)-(POSORD[b.pos]||9));
+  const removed=orig.filter(isOut);
+  const added=stArr.filter(p=>!orig.some(o=>o.id===p.id));
+  const bench=avail.filter(p=>!stIds.has(p.id)).sort((a,b)=>b.mpg-a.mpg);
+  const k=d.sample||1;
+  const agg=arr=>{
+    const s=f=>arr.reduce((x,p)=>x+p[f],0);
+    return {pts:s('pts')/k,reb:s('reb')/k,ast:s('ast')/k,min:s('min')/k,
+      fgp:s('fga')?s('fgm')/s('fga')*100:0,tpp:s('tpa')?s('tpm')/s('tpa')*100:0};
+  };
+  const S=agg(starters),B=agg(bench);
+  return {starters,bench,removed,added,isQ,outL,S,B,benchShare:(S.pts+B.pts)?B.pts/(S.pts+B.pts)*100:0,sample:d.sample};
+}
 
 /* ---------- prediction ---------- */
 function playedDays(id){
@@ -267,8 +294,7 @@ function predict(ev){
   const labels={rating:'Overall rating (Elo + efficiency)',home:'Home court',rest:'Rest / back-to-back',form:'Recent form (L10)',h2h:'Head-to-head',inj:'Injuries / lineup'};
   const reasons=Object.entries(F).filter(([k,v])=>Math.abs(v)>=0.4).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))
     .map(([k,v])=>T[k](v));
-  return {p,spread,F,labels,reasons,sH:(tot+spread)/2,sA:(tot-spread)/2,rH,rA,iH,iA,
-    lineupReady:!!(PL_DONE[H.id]&&PL_DONE[A.id])};
+  return {p,spread,F,labels,reasons,sH:(tot+spread)/2,sA:(tot-spread)/2,rH,rA,iH,iA};
 }
 
 /* ---------- UI ---------- */
@@ -288,9 +314,9 @@ function cardHTML(ev){
   return `<div class="card" onclick="openDetail('${ev.id}')">
     <div class="top"><span>${manila(ev.date)} (Manila)</span>${status}</div>
     <div class="teams">
-      <div class="tm">${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small></div>
+      <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')">${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small></div>
       <div class="at">@</div>
-      <div class="tm">${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small></div>
+      <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')">${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small></div>
     </div>${mid}</div>`;
 }
 function renderTabs(){
@@ -310,46 +336,102 @@ async function selectDay(i){
   if(CUR===i){renderGrid();$('#status').textContent=`Tapos na. ${evs.length} laro · NBA date ${DAYS[i]} (ET). Ang oras sa card ay Manila time.`}
 }
 
-/* ---------- detail modal ---------- */
+/* ---------- modal ---------- */
 function closeModal(){$('#modal').classList.remove('show')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+const findEv=id=>Object.values(SCHED).flat().find(e=>e.id===id);
+
+const pRow=(p,q)=>`<tr><td><span class="pos">${p.pos}</span><b>${p.name}</b>${q?` <span class="q">(${q})</span>`:''}</td>
+  <td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td><td>${p.fgp.toFixed(0)}%</td><td>${p.tpp.toFixed(0)}%</td></tr>`;
+const pHead=`<tr><th>Player</th><th>MIN</th><th>PPG</th><th>RPG</th><th>APG</th><th>FG%</th><th>3P%</th></tr>`;
+const qTag=(L,p)=>L.isQ(p)?'Questionable':'';
+
+/* Team view: starters (injury-adjusted), bench, bench scoring */
+async function openTeam(tid,evId){
+  const ev=findEv(evId);
+  $('#modal').classList.add('show');$('#mbody').innerHTML='<p>Kinukuha ang stats…</p>';
+  PL_DONE[tid]=await ensure(tid);
+  const T=M[tid];
+  const oppId=ev?(ev.home.id===tid?ev.away.id:ev.home.id):null;
+  if(oppId)PL_DONE[oppId]=await ensure(oppId);
+  const L=lineup(tid),O=oppId?lineup(oppId):null;
+  if(!T||!L){$('#mbody').innerHTML='<p>Walang sapat na player data.</p>';return}
+  let html=`${ev?`<button class="back" onclick="openDetail('${evId}')">← Balik sa laro</button>`:''}
+  <h1 style="font-size:20px">${img(T.logo).replace('<img','<img style="width:34px;height:34px;vertical-align:middle;margin-right:8px"')}${T.name} <span class="sub">(${T.w}-${T.l})</span></h1>
+  <div class="sub">Base sa huling ${L.sample} laro · PPG ng team: ${T.pf.toFixed(1)} · Opp: ${T.pa.toFixed(1)}</div>`;
+  if(L.removed.length||L.added.length){
+    html+=`<div class="note">⚠️ Hindi kasama sa lineup: ${L.outL.length?L.outL.map(i=>`<b class="o">${i.name}</b> (${i.status})`).join(', '):'—'}.
+    ${L.added.length?`Pumalit sa starting 5: <b>${L.added.map(p=>p.name).join(', ')}</b>.`:''}</div>`;
+  }
+  html+=`<h2>Possible starting 5</h2><table class="num">${pHead}${L.starters.map(p=>pRow(p,qTag(L,p))).join('')}</table>
+  <div class="pick">Total ng starters: <b>${L.S.pts.toFixed(1)} PTS</b> · ${L.S.reb.toFixed(1)} REB · ${L.S.ast.toFixed(1)} AST · ${L.S.fgp.toFixed(0)}% FG · ${L.S.tpp.toFixed(0)}% 3P (per game)</div>`;
+  html+=`<h2>Bench</h2>${L.bench.length?`<table class="num">${pHead}${L.bench.slice(0,9).map(p=>pRow(p,qTag(L,p))).join('')}</table>`:'<div class="sub">Walang bench data.</div>'}
+  <div class="two" style="margin-top:12px">
+    <div class="pick"><div class="sub">Bench scoring</div><div class="big">${L.B.pts.toFixed(1)} PTS</div><div class="sub">${L.benchShare.toFixed(0)}% ng points ng team · ${L.B.reb.toFixed(1)} REB · ${L.B.ast.toFixed(1)} AST · ${L.B.fgp.toFixed(0)}% FG</div></div>
+    ${O&&ev?`<div class="pick"><div class="sub">Bench scoring ng kalaban (${(ev.home.id===tid?ev.away:ev.home).abbr})</div><div class="big ${O.B.pts>L.B.pts?'':'w-txt'}">${O.B.pts.toFixed(1)} PTS</div><div class="sub">${L.B.pts>O.B.pts?`Lamang ang ${T.abbr} ng ${(L.B.pts-O.B.pts).toFixed(1)}`:O.B.pts>L.B.pts?`Lamang ang kalaban ng ${(O.B.pts-L.B.pts).toFixed(1)}`:'Pantay'}</div></div>`:''}
+  </div>`;
+  const out=(INJ[tid]||INJ[T.name]||[]);
+  html+=`<h2>Injury report</h2><div class="inj">${out.length?out.map(i=>`<div><b class="${SEV(i.status)>=.8?'o':'q'}">${i.status}</b> ${i.name}${i.note?' – '+i.note:''}</div>`).join(''):'Walang naka-report.'}</div>`;
+  const chips=`<div class="chips">${T.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
+  html+=`<h2>Huling 10 laro</h2>${chips}`;
+  $('#mbody').innerHTML=html;
+}
+
+/* Game view */
 async function openDetail(id){
-  const ev=Object.values(SCHED).flat().find(e=>e.id===id);if(!ev)return;
+  const ev=findEv(id);if(!ev)return;
   $('#modal').classList.add('show');$('#mbody').innerHTML='<p>Kinukuha ang stats…</p>';
   const [pH,pA]=await Promise.all([ensure(ev.home.id),ensure(ev.away.id)]);
   PL_DONE[ev.home.id]=pH;PL_DONE[ev.away.id]=pA;
   const p=predict(ev),H=M[ev.home.id],A=M[ev.away.id],h=ev.home,a=ev.away;
   if(!p){$('#mbody').innerHTML='<p>Walang sapat na data.</p>';return}
+  const LH=lineup(h.id),LA=lineup(a.id);
   const pHp=Math.round(p.p*100),pAp=100-pHp;
   let html=`<h1 style="font-size:20px">${a.name} @ ${h.name}</h1>
   <div class="sub">${manila(ev.date)} (Manila)</div>
+  <div style="margin:8px 0"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr} lineup & bench</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr} lineup & bench</button></div>
   <div class="pbar" style="height:14px"><i style="width:${pAp}%;background:${a.color}"></i><i style="width:${pHp}%;background:${h.color}"></i></div>
   <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
   <div class="pick">Predicted score: <b>${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</b> · Spread (home): ${f1(p.spread)}</div>
   <h2>Breakdown ng prediction (puntos para sa ${h.abbr})</h2>
   <table>${Object.entries(p.F).map(([k,v])=>`<tr><td>${p.labels[k]}</td><td style="text-align:right;color:${v>0?'var(--ok)':v<0?'var(--bad)':'var(--mut)'}">${f1(v)}</td></tr>`).join('')}</table>`;
 
-  // starters
-  const row=(x,y)=>{
+  // starters (injury-adjusted)
+  const row=(x,y,Lx,Ly)=>{
     const sc=q=>q?q.ppg+q.rpg+q.apg:0,aw=sc(x)>sc(y);
-    const cell=(q,win)=>q?`<td class="pp ${win?'hl':''}"><span class="pos">${q.pos}</span><b>${q.name}</b><small>${q.ppg.toFixed(1)} PPG · ${q.rpg.toFixed(1)} RPG · ${q.apg.toFixed(1)} APG · ${q.fgp.toFixed(0)}% FG · ${q.tpp.toFixed(0)}% 3P</small></td>`:'<td class="pp">—</td>';
-    return `<tr>${cell(x,aw)}${cell(y,!aw&&sc(y)>0)}</tr>`;
+    const cell=(q,win,L)=>q?`<td class="pp ${win?'hl':''}"><span class="pos">${q.pos}</span><b>${q.name}</b>${qTag(L,q)?` <span class="q">(Q)</span>`:''}<small>${q.ppg.toFixed(1)} PPG · ${q.rpg.toFixed(1)} RPG · ${q.apg.toFixed(1)} APG · ${q.fgp.toFixed(0)}% FG · ${q.tpp.toFixed(0)}% 3P</small></td>`:'<td class="pp">—</td>';
+    return `<tr>${cell(x,aw,Lx)}${cell(y,!aw&&sc(y)>0,Ly)}</tr>`;
   };
-  html+=`<h2>Projected starting 5 (huling ${Math.max(pA.sample,pH.sample)} laro)</h2>
-  <table><tr><th>${a.abbr}</th><th>${h.abbr}</th></tr>${[0,1,2,3,4].map(i=>row(pA.starters[i],pH.starters[i])).join('')}</table>`;
+  html+=`<h2>Possible starting 5 (wala ang Out/Doubtful)</h2>`;
+  [[LA,a],[LH,h]].forEach(([L,t])=>{
+    if(L&&(L.removed.length||L.added.length))html+=`<div class="note"><b>${t.abbr}</b>: wala ${L.removed.map(x=>`<b class="o">${x.name}</b>`).join(', ')||'—'}${L.added.length?` → pumalit si <b>${L.added.map(x=>x.name).join(', ')}</b>`:''}</div>`;
+  });
+  if(LA&&LH){
+    html+=`<table><tr><th>${a.abbr}</th><th>${h.abbr}</th></tr>${[0,1,2,3,4].map(i=>row(LA.starters[i],LH.starters[i],LA,LH)).join('')}</table>
+    <div class="two" style="margin-top:10px">
+      <div class="pick"><b>${a.abbr}</b> starters: ${LA.S.pts.toFixed(1)} PTS · ${LA.S.reb.toFixed(1)} REB · ${LA.S.ast.toFixed(1)} AST · ${LA.S.fgp.toFixed(0)}% FG · ${LA.S.tpp.toFixed(0)}% 3P</div>
+      <div class="pick"><b>${h.abbr}</b> starters: ${LH.S.pts.toFixed(1)} PTS · ${LH.S.reb.toFixed(1)} REB · ${LH.S.ast.toFixed(1)} AST · ${LH.S.fgp.toFixed(0)}% FG · ${LH.S.tpp.toFixed(0)}% 3P</div>
+    </div>
+    <h2>Bench scoring</h2>
+    <div class="two">
+      <div class="pick ${LA.B.pts>LH.B.pts?'hl':''}"><b>${a.abbr}</b><div class="big">${LA.B.pts.toFixed(1)} PTS</div><div class="sub">${LA.benchShare.toFixed(0)}% ng team points</div></div>
+      <div class="pick ${LH.B.pts>LA.B.pts?'hl':''}"><b>${h.abbr}</b><div class="big">${LH.B.pts.toFixed(1)} PTS</div><div class="sub">${LH.benchShare.toFixed(0)}% ng team points</div></div>
+    </div>
+    <div class="sub" style="margin-top:6px">I-click ang button sa taas para makita ang buong bench ng bawat team.</div>`;
+  }else html+=`<div class="sub">Hindi pa kumpleto ang lineup data.</div>`;
 
   // injuries
-  const injList=t=>{const l=INJ[t.id]||INJ[t.name]||[];
+  const injList=t=>{const l=injOf(t);
     return l.length?l.map(i=>`<div><b class="${SEV(i.status)>=.8?'o':'q'}">${i.status}</b> ${i.name}${i.note?' – '+i.note:''}</div>`).join(''):'<div>Walang naka-report.</div>'};
   html+=`<h2>Injury report</h2><div class="two inj"><div><b>${a.abbr}</b>${injList(a)}</div><div><b>${h.abbr}</b>${injList(h)}</div></div>`;
 
   // stats compare
   const aT=pA.team,hT=pH.team;
-  const rows=[['PPG',A.pf,H.pf,1,1],['Opp PPG',A.pa,H.pa,0,1],['Net',A.net,H.net,1,1],['L10 net',A.l10,H.l10,1,1],
-    ['Rating',A.str,H.str,1,1]];
-  if(aT&&hT)rows.push(['FG%',aT.fgp,hT.fgp,1,1],['3P%',aT.tpp,hT.tpp,1,1],['REB',aT.reb,hT.reb,1,1],['AST',aT.ast,hT.ast,1,1],
-    ['TO',aT.to,hT.to,0,1],['STL',aT.stl,hT.stl,1,1],['BLK',aT.blk,hT.blk,1,1]);
+  const rows=[['PPG',A.pf,H.pf,1],['Opp PPG',A.pa,H.pa,0],['Net',A.net,H.net,1],['L10 net',A.l10,H.l10,1],['Rating',A.str,H.str,1]];
+  if(aT&&hT)rows.push(['FG%',aT.fgp,hT.fgp,1],['3P%',aT.tpp,hT.tpp,1],['REB',aT.reb,hT.reb,1],['AST',aT.ast,hT.ast,1],
+    ['TO',aT.to,hT.to,0],['STL',aT.stl,hT.stl,1],['BLK',aT.blk,hT.blk,1]);
+  if(LA&&LH)rows.push(['Bench PTS',LA.B.pts,LH.B.pts,1]);
   let aw=0,hw=0;
   const cmp=rows.map(([l,av,hv,hi])=>{
     const better=hi?(av>hv?'a':av<hv?'h':''):(av<hv?'a':av>hv?'h':'');
@@ -364,9 +446,8 @@ async function openDetail(id){
   const lead=aw>hw?a.abbr:hw>aw?h.abbr:null;
   html+=`<h2>Team stats — ${a.abbr} vs ${h.abbr}</h2>${cmp}
   <div class="pick">${lead?`Lamang ang <b>${lead}</b> sa ${Math.max(aw,hw)} sa ${rows.length} categories`:'Pantay ang dalawa sa stats'}</div>
-  <div class="sub" style="margin-top:4px">PPG/Net/Rating = buong season. FG%, 3P%, REB, AST, TO, STL, BLK = average ng huling ${Math.max(pA.sample,pH.sample)} laro.</div>`;
+  <div class="sub" style="margin-top:4px">PPG/Net/Rating = buong season. Iba pa = average ng huling ${Math.max(pA.sample,pH.sample)} laro.</div>`;
 
-  // form
   const chips=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
   html+=`<h2>Huling 10 laro</h2><div class="two"><div><b>${a.abbr}</b> (${A.w}-${A.l})${chips(A)}</div><div><b>${h.abbr}</b> (${H.w}-${H.l})${chips(H)}</div></div>`;
   html+=`<div class="sub" style="margin-top:12px">Rest: ${a.abbr} ${p.rA.d==null?'—':p.rA.b2b?'back-to-back':p.rA.d+' araw pahinga'} · ${h.abbr} ${p.rH.d==null?'—':p.rH.b2b?'back-to-back':p.rH.d+' araw pahinga'}</div>`;
