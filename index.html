@@ -18,14 +18,24 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;padding:0 16px 30px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:.15s}
 .card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
-.top{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-bottom:10px}
+.card.isLive{border-color:#ff6b6b88}
+.top{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-bottom:10px;gap:8px}
 .teams{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tm{flex:1;text-align:center;border-radius:10px;padding:4px}
 .tm:hover{background:var(--card2)}
 .tm img{width:48px;height:48px;object-fit:contain}
 .tm b{display:block;font-size:16px}
 .tm small{color:var(--mut)}
+.side{font-size:10px;letter-spacing:.08em;color:var(--mut);background:var(--card2);padding:1px 8px;border-radius:99px;display:inline-block;margin-bottom:4px;font-weight:700}
+.side.home{background:#2d5bff33;color:#9db4ff}
+.sc{font-size:28px;font-weight:800;line-height:1.1}
+.sc.lead{color:var(--ok)}
 .at{color:var(--mut);font-size:12px}
+.live{color:var(--bad);font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.livebox{margin:8px 0;padding:10px 12px;border-radius:10px;background:#ff6b6b18;border:1px solid #ff6b6b55;font-size:15px}
+.finbox{margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--card2);font-size:15px}
 .pbar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:12px 0 6px;background:var(--line)}
 .pbar i{display:block;height:100%}
 .pl{display:flex;justify-content:space-between;font-weight:700}
@@ -71,12 +81,12 @@ footer{padding:0 16px 30px;color:var(--mut);font-size:11px}
 <body>
 <header>
   <h1>🏀 NBA Predictor</h1>
-  <div class="sub">Elo + efficiency + form + rest + home court + h2h + lineup/injuries · Oras sa Manila</div>
+  <div class="sub">Elo + efficiency + form + rest + home court + h2h + lineup/injuries · Lahat ng oras at petsa ay Manila time</div>
 </header>
 <nav id="tabs"></nav>
 <div id="status"></div>
 <main id="grid"></main>
-<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro, at hindi kasama ang mga Out/Doubtful.</footer>
+<footer>Para sa libangan lang. Hindi ito garantiya at hindi pang-sugal. Data: ESPN public API. Ang lineup ay projected base sa huling 5 laro, at hindi kasama ang mga Out/Doubtful. Ang live score ay nag-a-auto update kada 20 segundo.</footer>
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
 
 <script>
@@ -85,15 +95,21 @@ const API2='https://site.api.espn.com/apis/v2/sports/basketball/nba';
 const SEASON_START='2026-10-15';
 const PRIOR_SEASON=2026;
 const HCA=2.5;
+const REFRESH_MS=20000;
 const $=s=>document.querySelector(s);
-const fmtET=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+const dayIn=(d,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+const fmtET=d=>dayIn(d,'America/New_York');   // pang-fetch lang ng schedule ng ESPN at rest computation
+const fmtMN=d=>dayIn(d,'Asia/Manila');         // ito ang ipinapakita sa UI
 const ymd=s=>s.replace(/-/g,'');
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 const getJSON=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status+' '+u);return r.json()};
 const f1=x=>(x>=0?'+':'')+x.toFixed(1);
 
-let SCHED={}, M={}, INJ={}, PL={}, PRIOR={}, CUR=1, DAYS=[];
+let SCHED={}, M={}, INJ={}, PL={}, PRIOR={}, CUR=0, DAYS=[], STATUS_BASE='', LASTSIG='';
 const PL_DONE={};
+const allEvents=()=>Object.values(SCHED).flat();
+const evsOn=day=>allEvents().filter(e=>e.mnDay===day).sort((a,b)=>a.date.localeCompare(b.date));
+const findEv=id=>allEvents().find(e=>e.id===id);
 
 /* ---------- parsing ---------- */
 const tm=x=>({id:String(x.team.id),abbr:x.team.abbreviation,name:x.team.displayName,logo:x.team.logo,
@@ -102,12 +118,13 @@ function parseEvent(e){
   const c=e.competitions[0];
   const h=c.competitors.find(x=>x.homeAway==='home'),a=c.competitors.find(x=>x.homeAway==='away');
   const st=c.status||e.status;
-  return {id:e.id,date:e.date,etDay:fmtET(new Date(e.date)),type:e.season?.type,
+  const dt=new Date(e.date);
+  return {id:e.id,date:e.date,etDay:fmtET(dt),mnDay:fmtMN(dt),type:e.season?.type,
     state:st.type.state,completed:st.type.completed,detail:st.type.shortDetail,home:tm(h),away:tm(a)};
 }
 async function loadDay(d){
   try{const j=await getJSON(`${API}/scoreboard?dates=${ymd(d)}&limit=100`);
-    SCHED[d]=(j.events||[]).map(parseEvent);}catch(e){SCHED[d]=[];}
+    SCHED[d]=(j.events||[]).map(parseEvent);}catch(e){SCHED[d]??=[];}
 }
 async function loadPrior(){
   try{
@@ -172,6 +189,12 @@ function buildModel(games){
   }
   return T;
 }
+function rebuildModel(){
+  const seen=new Map();
+  for(const e of allEvents())if(e.completed&&e.type!==1)seen.set(e.id,e);
+  M=buildModel([...seen.values()]);
+  return seen.size;
+}
 
 /* ---------- players (boxscores ng huling 5 laro) ---------- */
 const POSORD={PG:1,G:1.5,SG:2,SF:3,F:3.5,PF:4,C:5};
@@ -226,7 +249,6 @@ function injImpact(team){
   }
   return {pts,names};
 }
-// Projected lineup: tinatanggal ang Out/Doubtful, pumapalit ang susunod na pinakamadalas mag-start
 function lineup(id){
   const d=PL_DONE[id],t=M[id];if(!d||!t)return null;
   const list=injOf(t);
@@ -255,7 +277,7 @@ function lineup(id){
 /* ---------- prediction ---------- */
 function playedDays(id){
   const s=new Set((M[id]?.g||[]).map(x=>x.day));
-  for(const d in SCHED)for(const e of SCHED[d])if(e.home.id===id||e.away.id===id)s.add(e.etDay);
+  for(const e of allEvents())if(e.home.id===id||e.away.id===id)s.add(e.etDay);
   return s;
 }
 function restOf(id,day){
@@ -299,55 +321,93 @@ function predict(ev){
 
 /* ---------- UI ---------- */
 const manila=d=>new Date(d).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const manilaTime=d=>new Date(d).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit',second:'2-digit'});
 const img=u=>u?`<img src="${u}" alt="" onerror="this.style.display='none'">`:'';
+
+function liveLine(ev){
+  const a=ev.away,h=ev.home;
+  if(ev.state==='in')return `<div class="livebox"><span class="live"><i class="dot"></i>LIVE</span> &nbsp; ${a.abbr} <b>${a.score}</b> – <b>${h.score}</b> ${h.abbr} &nbsp;·&nbsp; ${ev.detail}</div>`;
+  if(ev.state==='post')return `<div class="finbox"><span class="final">FINAL</span> &nbsp; ${a.abbr} <b>${a.score}</b> – <b>${h.score}</b> ${h.abbr}</div>`;
+  return '';
+}
+
 function cardHTML(ev){
   const p=predict(ev),h=ev.home,a=ev.away;
+  const showSc=ev.state!=='pre';
+  const aLead=showSc&&a.score>h.score,hLead=showSc&&h.score>a.score;
   let mid='';
   if(p){
     const pH=Math.round(p.p*100),pA=100-pH,fav=pH>=50?h:a,sp=Math.abs(p.spread);
     mid=`<div class="pbar"><i style="width:${pA}%;background:${a.color}"></i><i style="width:${pH}%;background:${h.color}"></i></div>
     <div class="pl"><span>${a.abbr} ${pA}%</span><span>${h.abbr} ${pH}%</span></div>
-    <div class="pick">Pick: <b>${fav.name}</b> (${fav.abbr} -${sp.toFixed(1)}) · Predicted: ${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</div>
+    <div class="pick">${ev.state==='pre'?'Pick':'Pre-game pick'}: <b>${fav.name}</b> (${fav.abbr} -${sp.toFixed(1)}) · Predicted: ${a.abbr} ${Math.round(p.sA)} – ${h.abbr} ${Math.round(p.sH)}</div>
     <ul class="why">${p.reasons.slice(0,3).map(r=>`<li>${r}</li>`).join('')||'<li>Halos pantay ang dalawang team</li>'}</ul>`;
   }else mid='<div class="pick">Walang sapat na data para sa prediction.</div>';
-  const status=ev.state==='post'?`<span class="final">FINAL ${a.score}-${h.score}</span>`:ev.state==='in'?`<span class="final">LIVE · ${ev.detail}</span>`:'';
-  return `<div class="card" onclick="openDetail('${ev.id}')">
-    <div class="top"><span>${manila(ev.date)} (Manila)</span>${status}</div>
+  const status=ev.state==='post'?`<span class="final">FINAL</span>`
+    :ev.state==='in'?`<span class="live"><i class="dot"></i>LIVE · ${ev.detail}</span>`:'';
+  return `<div class="card ${ev.state==='in'?'isLive':''}" onclick="openDetail('${ev.id}')">
+    <div class="top"><span>${manila(ev.date)}</span>${status}</div>
     <div class="teams">
-      <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')">${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small></div>
+      <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
       <div class="at">@</div>
-      <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')">${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small></div>
+      <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')"><span class="side home">HOME</span>${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small>${showSc?`<div class="sc ${hLead?'lead':''}">${h.score}</div>`:''}</div>
     </div>${mid}</div>`;
 }
 function renderTabs(){
   const lbl=['Ngayon','Bukas','Susunod'];
-  $('#tabs').innerHTML=DAYS.map((d,i)=>`<button class="${i===CUR?'on':''}" onclick="selectDay(${i})">${lbl[i]} · ${d.slice(5)} (ET)</button>`).join('');
+  $('#tabs').innerHTML=DAYS.map((d,i)=>{
+    const t=new Date(d+'T12:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',weekday:'short',month:'short',day:'numeric'});
+    const liveN=evsOn(d).filter(e=>e.state==='in').length;
+    return `<button class="${i===CUR?'on':''}" onclick="selectDay(${i})">${lbl[i]} · ${t}${liveN?` 🔴${liveN}`:''}</button>`;
+  }).join('');
 }
 function renderGrid(){
-  const evs=SCHED[DAYS[CUR]]||[];
+  const evs=evsOn(DAYS[CUR]);
   $('#grid').innerHTML=evs.length?evs.map(cardHTML).join(''):'<div class="sub" style="padding:20px">Walang laro sa araw na ito.</div>';
+}
+function setStatus(extra){
+  if(extra!==undefined)STATUS_BASE=extra;
+  $('#status').textContent=STATUS_BASE;
 }
 async function selectDay(i){
   CUR=i;renderTabs();renderGrid();
-  const evs=SCHED[DAYS[i]]||[];
+  const evs=evsOn(DAYS[i]);
   const ids=[...new Set(evs.flatMap(e=>[e.home.id,e.away.id]))];
-  $('#status').textContent='Kinukuha ang lineup at injury data…';
+  setStatus('Kinukuha ang lineup at injury data…');
   await Promise.all(ids.map(async id=>{PL_DONE[id]=await ensure(id)}));
-  if(CUR===i){renderGrid();$('#status').textContent=`Tapos na. ${evs.length} laro · NBA date ${DAYS[i]} (ET). Ang oras sa card ay Manila time.`}
+  if(CUR===i){renderGrid();setStatus(`Tapos na. ${evs.length} laro sa petsang ito (Manila time). Huling live update: ${manilaTime(new Date())}`)}
+}
+
+/* ---------- live refresh ---------- */
+const signature=()=>evsOn(DAYS[CUR]).map(e=>e.id+e.state+e.away.score+'-'+e.home.score+e.detail).join('|')
+  +'#'+allEvents().filter(e=>e.completed).length;
+async function refreshLive(){
+  if(document.hidden||!DAYS.length)return;
+  try{
+    const todayET=fmtET(new Date());
+    await Promise.all([addDays(todayET,-1),todayET,addDays(todayET,1),addDays(todayET,2)].map(loadDay));
+    const n=rebuildModel();
+    const sig=signature();
+    if(sig!==LASTSIG){LASTSIG=sig;renderGrid();}
+    renderTabs();
+    // i-update ang live score sa loob ng bukas na modal
+    allEvents().forEach(e=>{const el=document.getElementById('lv-'+e.id);if(el)el.innerHTML=liveLine(e)});
+    const base=STATUS_BASE.replace(/ Huling live update:.*$/,'');
+    STATUS_BASE=base+` Huling live update: ${manilaTime(new Date())}`;
+    setStatus();
+  }catch(e){}
 }
 
 /* ---------- modal ---------- */
 function closeModal(){$('#modal').classList.remove('show')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
-const findEv=id=>Object.values(SCHED).flat().find(e=>e.id===id);
 
 const pRow=(p,q)=>`<tr><td><span class="pos">${p.pos}</span><b>${p.name}</b>${q?` <span class="q">(${q})</span>`:''}</td>
   <td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td><td>${p.fgp.toFixed(0)}%</td><td>${p.tpp.toFixed(0)}%</td></tr>`;
 const pHead=`<tr><th>Player</th><th>MIN</th><th>PPG</th><th>RPG</th><th>APG</th><th>FG%</th><th>3P%</th></tr>`;
 const qTag=(L,p)=>L.isQ(p)?'Questionable':'';
 
-/* Team view: starters (injury-adjusted), bench, bench scoring */
 async function openTeam(tid,evId){
   const ev=findEv(evId);
   $('#modal').classList.add('show');$('#mbody').innerHTML='<p>Kinukuha ang stats…</p>';
@@ -378,7 +438,6 @@ async function openTeam(tid,evId){
   $('#mbody').innerHTML=html;
 }
 
-/* Game view */
 async function openDetail(id){
   const ev=findEv(id);if(!ev)return;
   $('#modal').classList.add('show');$('#mbody').innerHTML='<p>Kinukuha ang stats…</p>';
@@ -388,8 +447,9 @@ async function openDetail(id){
   if(!p){$('#mbody').innerHTML='<p>Walang sapat na data.</p>';return}
   const LH=lineup(h.id),LA=lineup(a.id);
   const pHp=Math.round(p.p*100),pAp=100-pHp;
-  let html=`<h1 style="font-size:20px">${a.name} @ ${h.name}</h1>
+  let html=`<h1 style="font-size:20px">${a.name} <span class="side">AWAY</span> @ ${h.name} <span class="side home">HOME</span></h1>
   <div class="sub">${manila(ev.date)} (Manila)</div>
+  <div id="lv-${id}">${liveLine(ev)}</div>
   <div style="margin:8px 0"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr} lineup & bench</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr} lineup & bench</button></div>
   <div class="pbar" style="height:14px"><i style="width:${pAp}%;background:${a.color}"></i><i style="width:${pHp}%;background:${h.color}"></i></div>
   <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
@@ -397,7 +457,6 @@ async function openDetail(id){
   <h2>Breakdown ng prediction (puntos para sa ${h.abbr})</h2>
   <table>${Object.entries(p.F).map(([k,v])=>`<tr><td>${p.labels[k]}</td><td style="text-align:right;color:${v>0?'var(--ok)':v<0?'var(--bad)':'var(--mut)'}">${f1(v)}</td></tr>`).join('')}</table>`;
 
-  // starters (injury-adjusted)
   const row=(x,y,Lx,Ly)=>{
     const sc=q=>q?q.ppg+q.rpg+q.apg:0,aw=sc(x)>sc(y);
     const cell=(q,win,L)=>q?`<td class="pp ${win?'hl':''}"><span class="pos">${q.pos}</span><b>${q.name}</b>${qTag(L,q)?` <span class="q">(Q)</span>`:''}<small>${q.ppg.toFixed(1)} PPG · ${q.rpg.toFixed(1)} RPG · ${q.apg.toFixed(1)} APG · ${q.fgp.toFixed(0)}% FG · ${q.tpp.toFixed(0)}% 3P</small></td>`:'<td class="pp">—</td>';
@@ -408,7 +467,7 @@ async function openDetail(id){
     if(L&&(L.removed.length||L.added.length))html+=`<div class="note"><b>${t.abbr}</b>: wala ${L.removed.map(x=>`<b class="o">${x.name}</b>`).join(', ')||'—'}${L.added.length?` → pumalit si <b>${L.added.map(x=>x.name).join(', ')}</b>`:''}</div>`;
   });
   if(LA&&LH){
-    html+=`<table><tr><th>${a.abbr}</th><th>${h.abbr}</th></tr>${[0,1,2,3,4].map(i=>row(LA.starters[i],LH.starters[i],LA,LH)).join('')}</table>
+    html+=`<table><tr><th>${a.abbr} (Away)</th><th>${h.abbr} (Home)</th></tr>${[0,1,2,3,4].map(i=>row(LA.starters[i],LH.starters[i],LA,LH)).join('')}</table>
     <div class="two" style="margin-top:10px">
       <div class="pick"><b>${a.abbr}</b> starters: ${LA.S.pts.toFixed(1)} PTS · ${LA.S.reb.toFixed(1)} REB · ${LA.S.ast.toFixed(1)} AST · ${LA.S.fgp.toFixed(0)}% FG · ${LA.S.tpp.toFixed(0)}% 3P</div>
       <div class="pick"><b>${h.abbr}</b> starters: ${LH.S.pts.toFixed(1)} PTS · ${LH.S.reb.toFixed(1)} REB · ${LH.S.ast.toFixed(1)} AST · ${LH.S.fgp.toFixed(0)}% FG · ${LH.S.tpp.toFixed(0)}% 3P</div>
@@ -421,12 +480,10 @@ async function openDetail(id){
     <div class="sub" style="margin-top:6px">I-click ang button sa taas para makita ang buong bench ng bawat team.</div>`;
   }else html+=`<div class="sub">Hindi pa kumpleto ang lineup data.</div>`;
 
-  // injuries
   const injList=t=>{const l=injOf(t);
     return l.length?l.map(i=>`<div><b class="${SEV(i.status)>=.8?'o':'q'}">${i.status}</b> ${i.name}${i.note?' – '+i.note:''}</div>`).join(''):'<div>Walang naka-report.</div>'};
   html+=`<h2>Injury report</h2><div class="two inj"><div><b>${a.abbr}</b>${injList(a)}</div><div><b>${h.abbr}</b>${injList(h)}</div></div>`;
 
-  // stats compare
   const aT=pA.team,hT=pH.team;
   const rows=[['PPG',A.pf,H.pf,1],['Opp PPG',A.pa,H.pa,0],['Net',A.net,H.net,1],['L10 net',A.l10,H.l10,1],['Rating',A.str,H.str,1]];
   if(aT&&hT)rows.push(['FG%',aT.fgp,hT.fgp,1],['3P%',aT.tpp,hT.tpp,1],['REB',aT.reb,hT.reb,1],['AST',aT.ast,hT.ast,1],
@@ -456,20 +513,19 @@ async function openDetail(id){
 
 /* ---------- init ---------- */
 (async function init(){
-  $('#status').textContent='Kinukuha ang schedule at resulta…';
+  setStatus('Kinukuha ang schedule at resulta…');
   try{
-    const today=fmtET(new Date());
-    DAYS=[today,addDays(today,1),addDays(today,2)];
-    const all=[];for(let d=SEASON_START;d<=DAYS[2];d=addDays(d,1))all.push(d);
+    const now=new Date();
+    const todayMN=fmtMN(now),todayET=fmtET(now);
+    DAYS=[todayMN,addDays(todayMN,1),addDays(todayMN,2)];
+    const all=[];for(let d=SEASON_START;d<=addDays(todayET,3);d=addDays(d,1))all.push(d);
     const [prior,inj]=await Promise.all([loadPrior(),loadInj(),Promise.all(all.map(loadDay))]);
     PRIOR=prior;INJ=inj;
-    const seen=new Map();
-    for(const d of all)for(const e of SCHED[d]||[])
-      if(e.completed&&e.type!==1&&e.etDay<=today)seen.set(e.id,e);
-    M=buildModel([...seen.values()]);
-    renderTabs();renderGrid();
-    $('#status').textContent=`${seen.size} natapos na laro ang ginamit sa ratings.`;
-    selectDay(1);
+    const n=rebuildModel();
+    CUR=0;renderTabs();renderGrid();LASTSIG=signature();
+    setStatus(`${n} natapos na laro ang ginamit sa ratings.`);
+    selectDay(0);
+    setInterval(refreshLive,REFRESH_MS);
   }catch(err){
     $('#status').innerHTML=`<span style="color:var(--bad)">Hindi makuha ang data: ${err.message}. Subukan ulit o i-check ang internet.</span>`;
   }
