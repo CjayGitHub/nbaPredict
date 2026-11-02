@@ -2,166 +2,274 @@
 <html lang="tl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0e16">
 <title>NBA Predictor</title>
 <style>
-:root{--bg:#0b0f17;--card:#141b29;--card2:#1b2436;--line:#243049;--tx:#e8edf7;--mut:#8b97b0;--ok:#3ddc97;--warn:#ffb84d;--bad:#ff6b6b;--aw:#ff9f43;--hm:#4d7cff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif}
-header{padding:16px 16px 4px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-h1{margin:0;font-size:20px}
-.sub{color:var(--mut);font-size:11px}
-#trk{display:flex;align-items:center;gap:8px;font-size:12px}
-.pillw{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-weight:700}
-.dots{display:flex;gap:3px}
-.dt{width:8px;height:8px;border-radius:50%;background:var(--line)}
+:root{
+  --bg:#0a0e16;--bg2:#0e1420;--card:#131a28;--card2:#1a2335;--card3:#212c42;--line:#222d44;--line2:#2d3a56;
+  --tx:#eef2fa;--tx2:#c3cce0;--mut:#8592ad;
+  --ok:#34d399;--warn:#fbbf24;--bad:#f87171;--aw:#fb923c;--hm:#60a5fa;--acc:#4f7cff;
+  --r:16px;--r2:12px;--r3:8px;
+  --sh:0 1px 0 rgba(255,255,255,.03) inset,0 8px 24px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{margin:0;background:radial-gradient(900px 400px at 50% -120px,#17213a 0,transparent 70%),var(--bg);color:var(--tx);
+  font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+button{font-family:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+/* ===== App bar ===== */
+.app{position:sticky;top:0;z-index:20;background:rgba(10,14,22,.82);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line)}
+.bar{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#ff8a3d,#ff5a5f 55%,#7c4dff);display:grid;place-items:center;box-shadow:0 6px 18px rgba(255,98,80,.28);flex:none}
+.logo svg{width:22px;height:22px}
+.brand h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.1;white-space:nowrap}
+.brand h1 span{background:linear-gradient(90deg,#ff9a5a,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand p{margin:2px 0 0;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbtn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line2);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;flex:none}
+.sbtn:hover{border-color:var(--acc);background:var(--card2)}
+.sbtn b{background:var(--acc);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;min-width:20px;text-align:center}
+.strip{max-width:1180px;margin:0 auto;padding:0 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--tx2);font-weight:600;white-space:nowrap}
+.pill i{font-style:normal;color:var(--mut);font-weight:500}
+.pill .live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(52,211,153,.18)}
+.dots{display:inline-flex;gap:3px;margin-left:2px}
+.dt{width:7px;height:7px;border-radius:50%;background:var(--line2)}
 .dt.ok{background:var(--ok)}.dt.no{background:var(--bad)}
-.sv{margin:8px 16px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
-.sv>summary{cursor:pointer;font-size:12px;font-weight:700;display:flex;gap:8px;align-items:center}
-.rec{font-size:10px;color:var(--mut);font-weight:700;background:var(--card2);padding:1px 7px;border-radius:99px}
-.dy{margin-top:6px}
-.dy>summary{cursor:pointer;font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;font-weight:700;padding:3px 0;display:flex;gap:8px;align-items:center}
-.sr{display:grid;grid-template-columns:44px 1fr auto 22px;gap:8px;font-size:12px;padding:5px 0;border-top:1px solid var(--line);cursor:pointer;align-items:center}
-.sr:hover{background:var(--card2)}
-.sr .t{color:var(--mut);font-size:10px}
-.mu{display:flex;gap:5px;align-items:center;color:var(--mut)}
-.mu .pk{color:var(--ok);font-weight:800}
-.at2{font-size:10px}
-.pc{display:flex;align-items:center;gap:5px}
-.pc em{font-style:normal;font-weight:700;font-size:11px;width:22px;text-align:right}
-.pc u{display:block;width:44px;height:5px;background:var(--line);border-radius:9px;overflow:hidden;text-decoration:none}
-.pc u i{display:block;height:100%;background:var(--ok)}
-.rs{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:800;background:var(--card2);color:var(--mut)}
-.rs.ok{background:#3ddc9730;color:var(--ok)}.rs.no{background:#ff6b6b30;color:var(--bad)}
-nav{display:flex;gap:6px;padding:12px 16px 6px;flex-wrap:wrap}
-nav button{background:var(--card);color:var(--tx);border:1px solid var(--line);padding:7px 12px;border-radius:999px;cursor:pointer;font-size:12px}
-nav button.on{background:#2d5bff;border-color:#2d5bff}
-#status{padding:0 16px 6px;color:var(--mut);font-size:11px;min-height:16px}
-#best{padding:0 16px}
-.bst{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.bt{font-size:11px;font-weight:800;color:var(--warn)}
-.bp{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;cursor:pointer}
-.bp:hover{border-color:#3b5bdb}
-.bp b{color:var(--ok)}
-.bp small{color:var(--mut);font-size:10px}
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;padding:0 16px 24px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;transition:.15s}
-.card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
-.card.isLive{border-color:#ff6b6b88}
-.top{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:11px;margin-bottom:8px;gap:8px}
-.topl{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.teams{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.tm{flex:1;text-align:center;border-radius:10px;padding:2px}
+
+/* ===== Day selector ===== */
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 4px}
+.dtab{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;text-align:left;cursor:pointer;transition:.15s;position:relative;display:flex;flex-direction:column;gap:2px}
+.dtab:hover{border-color:var(--line2);background:var(--card2)}
+.dtab .d1{font-size:13px;font-weight:700}
+.dtab .d2{font-size:11px;color:var(--mut)}
+.dtab .d3{position:absolute;right:10px;top:10px;font-size:11px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:5px}
+.dtab.on{background:linear-gradient(180deg,#2a4fd6,#2342b8);border-color:#5b82ff;box-shadow:0 6px 18px rgba(63,100,240,.32)}
+.dtab.on .d2,.dtab.on .d3{color:#d4defd}
+.dtab .lv{width:7px;height:7px;border-radius:50%;background:var(--bad);animation:pulse 1.2s infinite}
+
+/* ===== Sections ===== */
+.sh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:22px 0 10px}
+.sh h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.sh span{font-size:11px;color:var(--mut)}
+#status{font-size:11px;color:var(--mut);min-height:16px;margin-top:6px}
+
+/* ===== Best picks ===== */
+.hs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:none}
+.hs::-webkit-scrollbar{display:none}
+.bp{flex:0 0 auto;min-width:210px;scroll-snap-align:start;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--r2);padding:11px 12px;cursor:pointer;transition:.15s;display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:center}
+.bp:hover{border-color:var(--acc);transform:translateY(-1px)}
+.bp .rk{grid-row:span 2;width:30px;height:30px;border-radius:9px;background:var(--card3);display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--warn)}
+.bp .nm{font-size:15px;font-weight:800}
+.bp .nm small{font-size:11px;color:var(--mut);font-weight:500;margin-left:4px}
+.bp .pc{font-size:18px;font-weight:800;color:var(--ok);grid-row:span 2;text-align:right}
+.bp .tg{display:flex;gap:4px;align-items:center;font-size:10px;color:var(--mut)}
+.emp{color:var(--mut);font-size:12px;padding:6px 2px}
+
+/* ===== Game cards ===== */
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;padding-bottom:30px}
+.card{background:linear-gradient(180deg,var(--card),#101725);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:.15s;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px}
+.card:hover{border-color:var(--line2);transform:translateY(-2px)}
+.card.isLive{border-color:rgba(248,113,113,.55)}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ct{display:flex;flex-direction:column;line-height:1.2}
+.ct b{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.ct small{font-size:10.5px;color:var(--mut)}
+.ct em{font-style:normal;color:var(--mut);font-weight:600;font-size:10px;margin-left:3px}
+.stt{display:flex;align-items:center;gap:6px}
+.matchup{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+.tm{text-align:center;border-radius:var(--r2);padding:6px 4px;transition:.15s}
 .tm:hover{background:var(--card2)}
-.tm img{display:block;width:44px;height:44px;object-fit:contain;margin:0 auto 2px}
-.tm b{display:block;font-size:15px}
+.tm img{display:block;width:46px;height:46px;object-fit:contain;margin:6px auto 4px}
+.tm b{display:block;font-size:16px;letter-spacing:.01em}
 .tm small{color:var(--mut);font-size:11px}
-.side{display:block;width:max-content;margin:0 auto 5px;font-size:9px;letter-spacing:.1em;color:var(--mut);background:var(--card2);padding:1px 7px;border-radius:99px;font-weight:700;line-height:1.5}
-.side.home{background:#2d5bff33;color:#9db4ff}
-.side.inl{display:inline-block;margin:0 3px;vertical-align:middle}
-.sc{font-size:26px;font-weight:800;line-height:1.1}
+.side{display:block;width:max-content;margin:0 auto;font-size:9px;letter-spacing:.12em;color:var(--mut);font-weight:700}
+.side.home{color:var(--hm)}.side.away{color:var(--aw)}
+.side.inl{display:inline-block;margin:0 4px;vertical-align:middle;padding:1px 6px;border-radius:99px;background:var(--card2)}
+.vs{font-size:11px;color:var(--mut);font-weight:700}
+.sc{font-size:28px;font-weight:800;line-height:1.1;margin-top:2px;font-variant-numeric:tabular-nums}
 .sc.lead{color:var(--ok)}
-.at{color:var(--mut);font-size:12px;margin-top:46px}
-.live{color:var(--bad);font-weight:700;display:inline-flex;align-items:center;gap:5px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--bad);display:inline-block;animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.25}}
-.livebox{margin:6px 0;padding:8px 12px;border-radius:10px;background:#ff6b6b18;border:1px solid #ff6b6b55;font-size:14px}
-.finbox{margin:6px 0;padding:8px 12px;border-radius:10px;background:var(--card2);font-size:14px}
-.pbar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:10px 0 4px;background:var(--line)}
-.pbar i{display:block;height:100%}
-.pl{display:flex;justify-content:space-between;font-weight:700;font-size:13px}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.tile{background:var(--card2);border-radius:10px;padding:6px 8px;text-align:center}
-.tile small{display:block;color:var(--mut);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
-.tile b{font-size:14px}
+.prob{display:flex;flex-direction:column;gap:6px}
+.pbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line);gap:2px}
+.pbar i{display:block;height:100%;border-radius:99px}
+.pl{display:flex;justify-content:space-between;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+.pl span small{font-weight:500;color:var(--mut);font-size:11px;margin:0 4px}
+.tiles{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+.tile{background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:8px 10px;text-align:center}
+.tile small{display:block;color:var(--mut);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.tile b{font-size:15px;font-variant-numeric:tabular-nums}
+.tile.g{background:linear-gradient(180deg,rgba(52,211,153,.12),rgba(52,211,153,.04));border-color:rgba(52,211,153,.3)}
 .tile.g b{color:var(--ok)}
-.fcs{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-.fc{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:1px 7px;color:var(--mut)}
-.fc b{color:var(--tx)}
-.xl{font-size:10px;color:var(--tx);margin-top:7px;line-height:1.35}
-.xl span{color:var(--mut)}
-.vg{font-size:9px;color:var(--mut);margin-top:5px;opacity:.85}
-.cf{font-size:9px;font-weight:800;letter-spacing:.05em;border-radius:5px;padding:1px 6px;background:var(--card2);color:var(--mut);white-space:nowrap}
-.cf.c2{background:#3ddc9725;color:var(--ok)}
-.cf.c1{background:#4d7cff25;color:#9db4ff}
-.cf.c0{background:var(--card2);color:var(--mut)}
-.cf.up{background:#ffb84d25;color:var(--warn)}
-.final{color:var(--warn);font-weight:700}
+.tile .cfw{margin-top:3px;display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+.fcs{display:flex;gap:5px;flex-wrap:wrap}
+.fc{font-size:10.5px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:2px 8px;color:var(--mut)}
+.fc b{color:var(--tx2)}
+.xl{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.xi{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:7px 10px}
+.xi small{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;font-weight:600}
+.xi b{font-size:12.5px}
+.xi span{color:var(--mut);font-size:11px;font-weight:500}
+
+/* Vegas (maliit, reference lang) */
+.vg{display:flex;align-items:center;gap:6px;border-top:1px dashed var(--line2);padding-top:9px;margin-top:-2px;flex-wrap:wrap}
+.vgl{font-size:9px;letter-spacing:.14em;font-weight:800;color:var(--mut);background:var(--card2);border-radius:5px;padding:2px 6px}
+.vc{font-size:11px;color:var(--tx2);font-weight:600;display:inline-flex;align-items:baseline;gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-variant-numeric:tabular-nums}
+.vc small{font-size:9px;color:var(--mut);font-weight:600;letter-spacing:.06em}
+.vgn{font-size:11px;color:var(--mut)}
+
+/* badges */
+.cf{font-size:9.5px;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:2px 6px;background:var(--card3);color:var(--mut);white-space:nowrap;display:inline-block}
+.cf.c2{background:rgba(52,211,153,.16);color:var(--ok)}
+.cf.c1{background:rgba(96,165,250,.16);color:var(--hm)}
+.cf.up{background:rgba(251,191,36,.16);color:var(--warn)}
 .bd{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--mut);font-weight:700;display:inline-block}
-.bd.lk{color:#9db4ff;border-color:#2d5bff55}
-#modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:16px 8px;z-index:9}
+.bd.lk{color:#a5b4fc;border-color:rgba(99,102,241,.4)}
+.final{color:var(--warn);font-weight:800;font-size:11px;letter-spacing:.06em}
+.live{color:var(--bad);font-weight:800;display:inline-flex;align-items:center;gap:6px;font-size:11px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--bad);display:inline-block;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.rs{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:800;background:var(--card3);color:var(--mut)}
+.rs.ok{background:rgba(52,211,153,.2);color:var(--ok)}.rs.no{background:rgba(248,113,113,.2);color:var(--bad)}
+.livebox{margin:8px 0;padding:10px 12px;border-radius:var(--r2);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.4);font-size:14px}
+.finbox{margin:8px 0;padding:10px 12px;border-radius:var(--r2);background:var(--card2);font-size:14px}
+.sub{color:var(--mut);font-size:11px}
+
+/* ===== Saved drawer ===== */
+#ov{position:fixed;inset:0;background:rgba(3,6,12,.6);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+#ov.show{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--bg2);border-left:1px solid var(--line2);transform:translateX(102%);transition:transform .25s ease;z-index:41;display:flex;flex-direction:column}
+#drawer.show{transform:none}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dh h3{margin:0;font-size:16px}
+.dh p{margin:2px 0 0;font-size:11px;color:var(--mut)}
+.xb{background:var(--card);border:1px solid var(--line2);border-radius:10px;width:34px;height:34px;font-size:18px;cursor:pointer}
+.xb:hover{background:var(--card2)}
+#savedBody{overflow:auto;padding:6px 16px 24px;flex:1}
+.dy{margin-top:14px}
+.dy>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12px;font-weight:700;color:var(--tx2)}
+.dy>summary::-webkit-details-marker{display:none}
+.dy>summary .l{display:flex;align-items:center;gap:8px}
+.dy>summary .l:before{content:"▸";color:var(--mut);transition:.15s;font-size:11px}
+.dy[open]>summary .l:before{transform:rotate(90deg)}
+.rec{font-size:10.5px;color:var(--tx2);font-weight:700;background:var(--card2);padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.sr{display:grid;grid-template-columns:50px 1fr auto 24px;gap:10px;align-items:center;padding:9px 10px;margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);cursor:pointer;font-size:13px}
+.sr:hover{border-color:var(--line2);background:var(--card2)}
+.sr .t{font-size:11px;color:var(--mut);font-weight:600}
+.mu{display:flex;gap:6px;align-items:center;color:var(--mut);font-weight:600}
+.mu .pk{color:var(--ok);font-weight:800}
+.mu .at2{font-size:10px;opacity:.7}
+.pcs{display:flex;align-items:center;gap:6px}
+.pcs em{font-style:normal;font-weight:800;font-size:12px;width:34px;text-align:right}
+.pcs u{display:block;width:40px;height:5px;background:var(--line);border-radius:9px;overflow:hidden;text-decoration:none}
+.pcs u i{display:block;height:100%;background:var(--ok)}
+
+/* ===== Modal ===== */
+#modal{position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px;z-index:60}
 #modal.show{display:flex}
-.sheet{background:var(--card);border:1px solid var(--line);border-radius:16px;width:min(860px,100%);padding:16px;position:relative}
-.x{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--tx);font-size:24px;cursor:pointer}
-.back{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:5px 12px;cursor:pointer;margin-bottom:8px}
-.tbtn{background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:5px 11px;cursor:pointer;font-weight:700;margin:0 6px 6px 0;font-size:12px}
-.tbtn:hover{border-color:#3b5bdb}
-h2{font-size:11px;margin:18px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
-h2 .lg{float:right;text-transform:none;letter-spacing:0;font-weight:600}
+.sheet{background:var(--bg2);border:1px solid var(--line2);border-radius:20px;width:min(880px,100%);padding:18px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.x{position:absolute;right:12px;top:12px;background:var(--card);border:1px solid var(--line2);border-radius:10px;width:34px;height:34px;color:var(--tx);font-size:18px;cursor:pointer}
+.back{background:var(--card);color:var(--tx);border:1px solid var(--line2);border-radius:10px;padding:6px 12px;cursor:pointer;margin-bottom:10px;font-size:12px;font-weight:600}
+.tbtn{background:var(--card);color:var(--tx);border:1px solid var(--line2);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:700;margin:0 6px 6px 0;font-size:12px}
+.tbtn:hover{border-color:var(--acc)}
+.sheet h2{font-size:11px;margin:22px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.sheet h2 .lg{float:right;text-transform:none;letter-spacing:0;font-weight:600}
 table{width:100%;border-collapse:collapse}
-td,th{padding:4px 3px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle;text-align:left}
-th{color:var(--mut);font-weight:600;font-size:10px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle;text-align:left}
+th{color:var(--mut);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
 .pos{display:inline-block;min-width:24px;color:var(--mut);font-size:10px}
 .num td,.num th{text-align:right}.num td:first-child,.num th:first-child{text-align:left}
 tr.tot td{font-weight:800;color:var(--ok)}
-.cmp{display:grid;grid-template-columns:44px 1fr 74px 1fr 44px;gap:5px;align-items:center;padding:3px 0;font-size:12px}
+.cmp{display:grid;grid-template-columns:44px 1fr 74px 1fr 44px;gap:6px;align-items:center;padding:3px 0;font-size:12px}
 .cmp .l{text-align:center;color:var(--mut);font-size:10px}
-.cmp .bar{height:7px;background:var(--line);border-radius:9px;display:flex}
-.cmp .bar.a{justify-content:flex-end}
-.cmp .bar i{display:block;height:100%;border-radius:9px;background:#5b6b8c}
-.cmp .bar i.w{background:var(--ok)}
-.cmp .v{font-weight:600}.cmp .v.r{text-align:right}
+.cmp .bar2{height:7px;background:var(--line);border-radius:9px;display:flex}
+.cmp .bar2.a{justify-content:flex-end}
+.cmp .bar2 i{display:block;height:100%;border-radius:9px;background:#56688d}
+.cmp .bar2 i.w{background:var(--ok)}
+.cmp .v{font-weight:600;font-variant-numeric:tabular-nums}.cmp .v.r{text-align:right}
 .w-txt{color:var(--ok)}
 .km{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:4px}
 .tly{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-top:6px;font-size:12px}
-.dv{display:grid;grid-template-columns:84px 1fr 38px;gap:6px;align-items:center;padding:3px 0;font-size:12px}
+.dv{display:grid;grid-template-columns:84px 1fr 40px;gap:6px;align-items:center;padding:3px 0;font-size:12px}
 .dv .dl{color:var(--mut);font-size:11px}
-.dv .dn{text-align:right;font-weight:700;font-size:11px}
+.dv .dn{text-align:right;font-weight:700;font-size:11px;font-variant-numeric:tabular-nums}
 .dvb{display:grid;grid-template-columns:1fr 1fr;height:8px;background:var(--line);border-radius:9px;overflow:hidden}
 .dvb .l{display:flex;justify-content:flex-end;border-right:1px solid var(--bg)}
 .dvb .l i{display:block;height:100%;background:var(--aw)}
 .dvb .r i{display:block;height:100%;background:var(--hm)}
 .ij{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;margin:2px 3px 2px 0;background:var(--card2);color:var(--mut);white-space:nowrap}
-.ij.out{background:#ff6b6b25;color:var(--bad)}.ij.dbt{background:#ffb84d25;color:var(--warn)}.ij.q{background:#ffb84d15;color:var(--warn)}.ij.ad{background:#3ddc9725;color:var(--ok)}
+.ij.out{background:rgba(248,113,113,.16);color:var(--bad)}.ij.dbt{background:rgba(251,191,36,.16);color:var(--warn)}.ij.ad{background:rgba(52,211,153,.16);color:var(--ok)}
 .sw{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 6px}
-.sw .ij{margin:0}
-.sw .ar{color:var(--mut);font-size:12px}
+.sw .ij{margin:0}.sw .ar{color:var(--mut);font-size:12px}
 .q{color:var(--warn);font-weight:700}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.st{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.st{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}
 .st .tile b{font-size:13px}
-.th{margin-bottom:3px;font-size:13px}
+.th{margin-bottom:4px;font-size:13px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
-.chip.W{background:#3ddc9730;color:var(--ok)}.chip.L{background:#ff6b6b30;color:var(--bad)}
-.ir{border-top:1px solid var(--line);padding:4px 0}
+.chip.W{background:rgba(52,211,153,.18);color:var(--ok)}.chip.L{background:rgba(248,113,113,.18);color:var(--bad)}
+.ir{border-top:1px solid var(--line);padding:5px 0}
 .ir:first-of-type{border-top:0}
 .ir summary{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;list-style:none;flex-wrap:wrap}
 .ir summary::-webkit-details-marker{display:none}
 .ib{font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;min-width:34px;text-align:center;background:var(--card2);color:var(--mut)}
-.ib.out{background:#ff6b6b25;color:var(--bad)}
-.ib.dbt{background:#ffb84d25;color:var(--warn)}
-.ib.dtd,.ib.q{background:#ffb84d15;color:var(--warn)}
-.ig{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--tx);text-transform:capitalize}
+.ib.out{background:rgba(248,113,113,.16);color:var(--bad)}
+.ib.dbt,.ib.dtd,.ib.q{background:rgba(251,191,36,.14);color:var(--warn)}
+.ig{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--tx2);text-transform:capitalize}
 .is{font-size:10px;color:var(--mut);margin-left:auto}
 .is:before{content:"📰 "}
 .inf{font-size:11px;color:var(--mut);padding:4px 0 2px 40px;line-height:1.35}
 .ret{font-size:10px;color:var(--ok)}
-@media(max-width:560px){.two{grid-template-columns:1fr}.st{grid-template-columns:repeat(3,1fr)}}
-footer{padding:0 16px 24px;color:var(--mut);font-size:10px}
+footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;color:var(--mut);font-size:10.5px}
+
+@media(max-width:620px){
+  .wrap{padding:0 12px}.bar{padding:9px 12px}.strip{padding:0 12px 9px}
+  .brand p{display:none}
+  .two{grid-template-columns:1fr}.st{grid-template-columns:repeat(3,1fr)}
+  #grid{grid-template-columns:1fr}
+  .dtab .d3{position:static}.dtab{padding:9px 10px}
+  .sheet{padding:14px;border-radius:18px}
+}
 </style>
 </head>
 <body>
-<header>
-  <div><h1>🏀 NBA Predictor</h1><div class="sub">Oras: Manila</div></div>
-  <div id="trk"></div>
+
+<header class="app">
+  <div class="bar">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 2.8v18.4M2.8 12h18.4M5.2 5.6c3.6 3.2 3.6 9.6 0 12.8M18.8 5.6c-3.6 3.2-3.6 9.6 0 12.8"/></svg></div>
+      <div><h1>NBA <span>Predictor</span></h1><p>Data-driven game picks</p></div>
+    </div>
+    <button class="sbtn" onclick="toggleDrawer(true)">📌 Saved <b id="savedCnt">0</b></button>
+  </div>
+  <div class="strip">
+    <span class="pill"><span class="live-dot"></span><i>Manila</i> <b id="clock">—</b></span>
+    <span id="trk"></span>
+  </div>
 </header>
-<details class="sv" id="saved"><summary id="savedSum">📌 Saved</summary><div id="savedBody"></div></details>
-<nav id="tabs"></nav>
-<div id="status"></div>
-<div id="best"></div>
-<main id="grid"></main>
-<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas odds ay pang-tingin lang at hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
+
+<div class="wrap">
+  <div class="days" id="tabs"></div>
+  <div id="status"></div>
+
+  <div class="sh"><h2>⭐ Best picks</h2><span>Pinakamataas ang tiwala ng model</span></div>
+  <div class="hs" id="best"></div>
+
+  <div class="sh"><h2 id="gtitle">Mga laro</h2><span>Lahat ng oras ay Manila (PHT)</span></div>
+  <main id="grid"></main>
+</div>
+
+<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas line ay reference lang at hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
+
+<div id="ov" onclick="toggleDrawer(false)"></div>
+<aside id="drawer">
+  <div class="dh"><div><h3>📌 Saved predictions</h3><p>Naka-lock pagsimula ng laro · nabubura pagkalipas ng 3 araw</p></div><button class="xb" onclick="toggleDrawer(false)">×</button></div>
+  <div id="savedBody"></div>
+</aside>
+
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
 
 <script>
@@ -193,6 +301,15 @@ const allEvents=()=>{const m=new Map();for(const d in SCHED)for(const e of SCHED
 const evsOn=day=>allEvents().filter(e=>e.mnDay===day).sort((a,b)=>a.date.localeCompare(b.date));
 const findEv=id=>allEvents().find(e=>e.id===id);
 
+/* ---------- Manila time helpers ---------- */
+const TZ='Asia/Manila';
+const manilaT=d=>new Date(d).toLocaleTimeString('en-PH',{timeZone:TZ,hour:'numeric',minute:'2-digit'});
+const manilaTS=d=>new Date(d).toLocaleTimeString('en-PH',{timeZone:TZ,hour:'numeric',minute:'2-digit',second:'2-digit'});
+const manilaD=d=>new Date(d).toLocaleDateString('en-PH',{timeZone:TZ,weekday:'short',month:'short',day:'numeric'});
+const manilaFull=d=>`${manilaD(d)} · ${manilaT(d)} PHT`;
+function tickClock(){$('#clock').textContent=`${manilaD(new Date())} · ${manilaT(new Date())}`}
+setInterval(tickClock,15000);tickClock();
+
 const LOC={ATL:[33.757,-84.396,-5],BOS:[42.366,-71.062,-5],BKN:[40.683,-73.975,-5],CHA:[35.225,-80.839,-5],CHI:[41.881,-87.674,-6],
 CLE:[41.496,-81.688,-5],DAL:[32.790,-96.810,-6],DEN:[39.749,-105.008,-7],DET:[42.341,-83.055,-5],GS:[37.768,-122.388,-8],
 HOU:[29.751,-95.362,-6],IND:[39.764,-86.156,-5],LAC:[33.943,-118.341,-8],LAL:[34.043,-118.267,-8],MEM:[35.138,-90.051,-6],
@@ -202,7 +319,7 @@ SAC:[38.580,-121.500,-8],SA:[29.427,-98.438,-6],TOR:[43.643,-79.379,-5],UTA:[40.
 function miles(a,b){const R=3959,r=x=>x*Math.PI/180;const dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);
   const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 
-/* ---------- Vegas odds (pang-display lang, hindi ginagamit sa prediction) ---------- */
+/* ---------- Vegas odds (display lang, hindi ginagamit sa prediction) ---------- */
 const ODDK='nbaOdds_v1';
 let ODDC={};try{ODDC=JSON.parse(localStorage.getItem(ODDK)||'{}')}catch(e){}
 let oddsDirty=false;
@@ -213,17 +330,16 @@ function parseOdds(id,c,pre){
     if(JSON.stringify(ODDC[id])!==JSON.stringify(v)){ODDC[id]=v;oddsDirty=true}
     return v;
   }
-  return ODDC[id]||null;   // pagsimula ng laro, ang pregame line ang itinatago
+  return ODDC[id]||null;
 }
 const mlf=n=>n==null||n===''?'—':(+n>0?'+':'')+n;
-function oddsLine(ev){
+function oddsHTML(ev){
   const o=ev.odds;
-  if(!o)return '<div class="vg">🎰 Vegas: —</div>';
-  const parts=[];
-  if(o.d)parts.push(o.d);
-  if(o.ou!=null)parts.push('O/U '+o.ou);
-  if(o.ma!=null||o.mh!=null)parts.push(`ML ${ev.away.abbr} ${mlf(o.ma)} / ${ev.home.abbr} ${mlf(o.mh)}`);
-  return `<div class="vg">🎰 Vegas: ${parts.join(' · ')||'—'}</div>`;
+  if(!o)return '<div class="vg"><span class="vgl">VEGAS</span><span class="vgn">Walang line</span></div>';
+  return `<div class="vg"><span class="vgl">VEGAS</span>
+    ${o.d?`<span class="vc"><small>SPR</small>${o.d}</span>`:''}
+    ${o.ou!=null?`<span class="vc"><small>O/U</small>${o.ou}</span>`:''}
+    ${(o.ma!=null||o.mh!=null)?`<span class="vc"><small>ML</small>${mlf(o.ma)} / ${mlf(o.mh)}</span>`:''}</div>`;
 }
 
 /* ---------- saved predictions + tracker ---------- */
@@ -293,18 +409,19 @@ function trackStats(){
 }
 function renderTracker(){
   const s=trackStats();
-  $('#trk').innerHTML=s.n?`<span class="pillw">🎯 ${s.w}-${s.l} · ${Math.round(s.w/s.n*100)}%</span><span class="dots">${s.seq.map(x=>`<i class="dt ${x?'ok':'no'}"></i>`).join('')}</span>`
-    :'<span class="pillw">🎯 0-0</span>';
+  $('#trk').innerHTML=s.n?`<span class="pill">🎯 <b>${s.w}-${s.l}</b> <i>${Math.round(s.w/s.n*100)}% accuracy</i><span class="dots">${s.seq.map(x=>`<i class="dt ${x?'ok':'no'}"></i>`).join('')}</span></span>`
+    :'<span class="pill">🎯 <b>0-0</b> <i>accuracy</i></span>';
 }
+function toggleDrawer(on){$('#drawer').classList.toggle('show',on);$('#ov').classList.toggle('show',on)}
 function togDay(d,o){OPEN[d]=o}
 function renderSaved(){
   const today=fmtMN(new Date()),cut=addDays(today,-KEEP_DAYS);
-  const by={};let n=0,tw=0,tl=0;
+  const by={};let n=0;
   for(const id in TK){const s=TK[id];if(s.mn<cut)continue;(by[s.mn]??=[]).push([id,s]);n++}
   const days=Object.keys(by).sort().reverse();
   const lab=d=>{const k=Math.round((Date.parse(d)-Date.parse(today))/864e5);
     const nm=k===0?'Ngayon':k===1?'Bukas':k===-1?'Kahapon':'';
-    const dt=new Date(d+'T12:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'short',day:'numeric'});
+    const dt=new Date(d+'T12:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',weekday:'short',month:'short',day:'numeric'});
     return (nm?nm+' · ':'')+dt};
   let html='';
   for(const d of days){
@@ -315,18 +432,16 @@ function renderSaved(){
       let res='<span class="rs">·</span>';
       if(s.fin){const ok=(pr.p>=.5)===(s.hs>s.as);ok?w++:l++;res=`<span class="rs ${ok?'ok':'no'}" title="${s.as}-${s.hs}">${ok?'✓':'✗'}</span>`}
       else if(ev&&ev.state==='in')res='<span class="dot"></span>';
-      const tm=new Date(s.d).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'}).replace(' ','');
-      return `<div class="sr" onclick="openDetail('${id}')" title="Predicted ${Math.round(pr.sA)}-${Math.round(pr.sH)}${s.recon?' · rekonstruksyon':''}">
-        <span class="t">${tm}</span>
-        <span class="mu"><span class="${!hp?'pk':''}">${s.a}</span><span class="at2">@</span><span class="${hp?'pk':''}">${s.h}</span>${s.recon?'<span class="at2" title="rekonstruksyon">ᴿ</span>':''}</span>
-        <span class="pc"><em>${pc}</em><u><i style="width:${pc}%"></i></u></span>${res}</div>`;
+      return `<div class="sr" onclick="toggleDrawer(false);openDetail('${id}')">
+        <span class="t">${manilaT(s.d)}</span>
+        <span class="mu"><span class="${!hp?'pk':''}">${s.a}</span><span class="at2">@</span><span class="${hp?'pk':''}">${s.h}</span>${s.recon?'<span class="cf" title="rekonstruksyon">R</span>':''}</span>
+        <span class="pcs"><em>${pc}%</em><u><i style="width:${pc}%"></i></u></span>${res}</div>`;
     }).join('');
-    tw+=w;tl+=l;
     const open=OPEN[d]!==undefined?OPEN[d]:d>=today;
-    html+=`<details class="dy" ${open?'open':''} ontoggle="togDay('${d}',this.open)"><summary>${lab(d)}${w+l?`<span class="rec">${w}-${l}</span>`:''}</summary>${rows}</details>`;
+    html+=`<details class="dy" ${open?'open':''} ontoggle="togDay('${d}',this.open)"><summary><span class="l">${lab(d)}</span>${w+l?`<span class="rec">${w}-${l}</span>`:`<span class="rec">${by[d].length} laro</span>`}</summary>${rows}</details>`;
   }
-  $('#savedSum').innerHTML=`📌 Saved <span class="rec">${n}</span>${tw+tl?`<span class="rec">${tw}-${tl}</span>`:''}`;
-  $('#savedBody').innerHTML=html||'<div class="sub">Wala pa.</div>';
+  $('#savedCnt').textContent=n;
+  $('#savedBody').innerHTML=html||'<div class="emp">Wala pang naka-save na prediction.</div>';
 }
 
 /* ---------- parsing ---------- */
@@ -567,8 +682,6 @@ function lineup(id){
   const S=agg(starters),B=agg(bench);
   return {starters,bench,removed,added,isQ,outL,S,B,benchShare:(S.pts+B.pts)?B.pts/(S.pts+B.pts)*100:0,sample:d.sample,depth:d.depth};
 }
-
-/* top scorers + star player ng team (wala ang Out) */
 function scorers(id,predScore){
   const L=lineup(id),T=M[id];if(!L||!T)return null;
   const scale=clamp(predScore/(T.pf||112),.9,1.1);
@@ -671,9 +784,6 @@ function confOf(p){
 const confChip=p=>{const c=confOf(p);return `<span class="cf c${c.tier}" title="Confidence batay sa % at dami ng data">${c.lab}</span>${c.up?'<span class="cf up" title="Magkasalungat ang ilang factor o malapit sa 50%">⚠ UPSET</span>':''}`};
 
 /* ---------- visual helpers ---------- */
-const manila=d=>new Date(d).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-const manilaT=d=>new Date(d).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'});
-const manilaTime=d=>new Date(d).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit',second:'2-digit'});
 const img=u=>u?`<img src="${u}" alt="" onerror="this.style.display='none'">`:'';
 const tc=c=>{const h=(c||'#888').replace('#','');if(h.length!==6)return '#8b97b0';
   const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
@@ -685,7 +795,6 @@ function pbar(a,h,pA,pH,ht){
 const sh=n=>{const p=(n||'').split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):n};
 const ln=n=>{const p=(n||'').split(' ');return p.length>1?p.slice(1).join(' '):n};
 
-/* ---------- injury display ---------- */
 function injInfo(i){
   const t=((i.note||'')+' '+(i.long||'')).replace(/\s+/g,' ').trim(),low=t.toLowerCase();
   let why=(i.part||'').trim();
@@ -715,9 +824,7 @@ function injChips(t){
     return `<details class="ir"><summary><span class="ib ${f.code}">${f.short}</span><b>${sh(i.name)}</b>${f.why?`<span class="ig">${f.why}</span>`:''}${ret}<span class="is">${f.tag}</span></summary>${f.text?`<div class="inf">${f.text}</div>`:''}</details>`};
   return l.slice(0,10).map(row).join('')+(l.length>10?`<div class="sub">+${l.length-10} pa</div>`:'');
 }
-
 const chipsRow=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
-
 function swapHTML(L){
   const r=L.removed,a=L.added;
   if(!r.length&&!a.length)return '';
@@ -727,7 +834,6 @@ function swapHTML(L){
   }
   return h;
 }
-
 function tally(aw,hw,a,h){
   const t=(aw+hw)||1;
   return `<div class="tly"><b>${a.abbr} ${aw}</b><div class="pbar" style="height:6px;margin:0"><i style="width:${aw/t*100}%;background:var(--aw)"></i><i style="width:${hw/t*100}%;background:var(--hm)"></i></div><b>${hw} ${h.abbr}</b></div>`;
@@ -743,8 +849,8 @@ function cmpHTML(rows){
     if(up&&(av<0||hv<0)){sa=av+50;sh2=hv+50}
     const tt=(sa+sh2)||1,wa=sa/tt*100,wh=sh2/tt*100;
     return `<div class="cmp"><span class="v ${better==='a'?'w-txt':''}">${av.toFixed(dec)}</span>
-      <div class="bar a"><i class="${better==='a'?'w':''}" style="width:${wa}%"></i></div><span class="l">${l}</span>
-      <div class="bar"><i class="${better==='h'?'w':''}" style="width:${wh}%"></i></div><span class="v r ${better==='h'?'w-txt':''}">${hv.toFixed(dec)}</span></div>`;
+      <div class="bar2 a"><i class="${better==='a'?'w':''}" style="width:${wa}%"></i></div><span class="l">${l}</span>
+      <div class="bar2"><i class="${better==='h'?'w':''}" style="width:${wh}%"></i></div><span class="v r ${better==='h'?'w-txt':''}">${hv.toFixed(dec)}</span></div>`;
   }).join('');
   return {html,aw,hw};
 }
@@ -755,7 +861,6 @@ function dvRows(items){
       <span class="dn" style="color:${v>0.05?'var(--hm)':v<-0.05?'var(--aw)':'var(--mut)'}">${f1(v)}</span></div>`;
   }).join('');
 }
-
 function liveLine(ev){
   const a=ev.away,h=ev.home;
   if(ev.state==='in')return `<div class="livebox"><span class="live"><i class="dot"></i>LIVE</span> &nbsp; ${a.abbr} <b>${a.score}</b> – <b>${h.score}</b> ${h.abbr} <span class="sub">· ${ev.detail}</span></div>`;
@@ -772,12 +877,17 @@ function renderBest(){
     arr.push({e,p,c,s:c.c+c.tier*.05-(c.up?.08:0)});
   }
   arr.sort((x,y)=>y.s-x.s);
-  const top=arr.slice(0,3);
-  $('#best').innerHTML=top.length?`<div class="bst"><span class="bt">⭐ Best picks</span>${top.map(({e,p,c})=>{
+  const top=arr.slice(0,4);
+  $('#best').innerHTML=top.length?top.map(({e,p,c},i)=>{
     const hp=p.p>=.5,pk=hp?e.home:e.away,op=hp?e.away:e.home;
     const res=e.state==='post'?`<span class="rs ${hp===(e.home.score>e.away.score)?'ok':'no'}">${hp===(e.home.score>e.away.score)?'✓':'✗'}</span>`:'';
-    return `<div class="bp" onclick="openDetail('${e.id}')"><b>${pk.abbr}</b><span>${Math.round(c.c*100)}%</span><small>vs ${op.abbr}</small><span class="cf c${c.tier}">${c.lab}</span>${c.up?'<span class="cf up">⚠</span>':''}${res}</div>`;
-  }).join('')}</div>`:'';
+    return `<div class="bp" onclick="openDetail('${e.id}')">
+      <div class="rk">${i+1}</div>
+      <div class="nm">${pk.abbr}<small>vs ${op.abbr}</small></div>
+      <div class="pc">${Math.round(c.c*100)}%</div>
+      <div class="tg"><span class="cf c${c.tier}">${c.lab}</span>${c.up?'<span class="cf up">⚠</span>':''}<span>${manilaT(e.date)}</span>${res}</div>
+    </div>`;
+  }).join(''):'<div class="emp">Wala pang pick para sa araw na ito.</div>';
 }
 
 /* ---------- cards ---------- */
@@ -793,45 +903,49 @@ function cardHTML(ev){
     let xl='';
     if(p.ts&&p.ts.a?.[0]&&p.ts.h?.[0]){
       const ta=p.ts.a[0],th=p.ts.h[0],best=ta.pts>=th.pts?[ta,a]:[th,h];
-      xl=`<div class="xl">🎯 <span>Top scorer:</span> <b>${sh(best[0].n)}</b> ${best[1].abbr} ~${Math.round(best[0].pts)} · ⚔ <span>Key:</span> ${ln(p.ts.ka.n)} vs ${ln(p.ts.kh.n)}</div>`;
+      xl=`<div class="xl"><div class="xi"><small>🎯 Top scorer</small><b>${sh(best[0].n)}</b> <span>${best[1].abbr} · ~${Math.round(best[0].pts)} pts</span></div>
+        <div class="xi"><small>⚔ Key matchup</small><b>${ln(p.ts.ka.n)}</b> <span>vs</span> <b>${ln(p.ts.kh.n)}</b></div></div>`;
     }
-    mid=`${pbar(a,h,pA,pH)}
-    <div class="pl"><span>${a.abbr} ${pA}%</span><span>${h.abbr} ${pH}%</span></div>
+    mid=`<div class="prob">${pbar(a,h,pA,pH)}<div class="pl"><span>${a.abbr}<small></small>${pA}%</span><span>${pH}% ${h.abbr}</span></div></div>
     <div class="tiles">
-      <div class="tile g"><small>${ev.state==='pre'?'Pick':'🔒 Pick'}</small><b>${fav.abbr} -${sp.toFixed(1)}</b></div>
+      <div class="tile g"><small>${ev.state==='pre'?'Pick':'🔒 Pick'}</small><b>${fav.abbr} -${sp.toFixed(1)}</b><div class="cfw">${confChip(p)}</div></div>
       <div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div>
       <div class="tile"><small>Total</small><b>${Math.round(p.tot)}</b></div>
     </div>
-    <div class="fcs">${chips||'<span class="fc">Pantay</span>'}</div>${xl}`;
-  }else mid='<div class="sub" style="margin-top:8px">Walang sapat na data.</div>';
+    ${chips?`<div class="fcs">${chips}</div>`:''}${xl}`;
+  }else mid='<div class="sub">Walang sapat na data para sa prediction.</div>';
   let mark='';
-  if(ev.state==='post'&&p){const ok=(p.p>=.5)===(h.score>a.score);mark=`<span class="rs ${ok?'ok':'no'}">${ok?'✓':'✗'}</span> `}
+  if(ev.state==='post'&&p){const ok=(p.p>=.5)===(h.score>a.score);mark=`<span class="rs ${ok?'ok':'no'}">${ok?'✓':'✗'}</span>`}
   const status=ev.state==='post'?`${mark}<span class="final">FINAL</span>`
-    :ev.state==='in'?`<span class="live"><i class="dot"></i>${ev.detail}</span>`:'';
+    :ev.state==='in'?`<span class="live"><i class="dot"></i>LIVE · ${ev.detail}</span>`:'';
   return `<div class="card ${ev.state==='in'?'isLive':''}" onclick="openDetail('${ev.id}')">
-    <div class="top"><span class="topl">${manilaT(ev.date)}${snap?.recon?' <span class="bd" title="rekonstruksyon">R</span>':''}${p?confChip(p):''}</span><span>${status}</span></div>
-    <div class="teams">
-      <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
-      <div class="at">@</div>
-      <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')"><span class="side home">HOME</span>${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small>${showSc?`<div class="sc ${hLead?'lead':''}">${h.score}</div>`:''}</div>
-    </div>${mid}${oddsLine(ev)}</div>`;
+    <div class="ch"><div class="ct"><b>${manilaT(ev.date)}<em>PHT</em></b><small>${manilaD(ev.date)}</small></div>
+      <div class="stt">${snap?.recon?'<span class="cf" title="rekonstruksyon">R</span>':''}${status}</div></div>
+    <div class="matchup">
+      <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side away">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record||'&nbsp;'}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
+      <div class="vs">@</div>
+      <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')"><span class="side home">HOME</span>${img(h.logo)}<b>${h.abbr}</b><small>${h.record||'&nbsp;'}</small>${showSc?`<div class="sc ${hLead?'lead':''}">${h.score}</div>`:''}</div>
+    </div>${mid}${oddsHTML(ev)}</div>`;
 }
 function renderTabs(){
-  const lbl=['Ngayon','Bukas','Susunod'];
+  const lbl=['Ngayon','Bukas'];
   $('#tabs').innerHTML=DAYS.map((d,i)=>{
-    const t=new Date(d+'T12:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'short',day:'numeric'});
-    const liveN=evsOn(d).filter(e=>e.state==='in').length;
-    return `<button class="${i===CUR?'on':''}" onclick="selectDay(${i})">${lbl[i]} · ${t}${liveN?` 🔴${liveN}`:''}</button>`;
+    const dt=new Date(d+'T12:00:00Z');
+    const top=lbl[i]||dt.toLocaleDateString('en-PH',{timeZone:'UTC',weekday:'long'});
+    const sub=dt.toLocaleDateString('en-PH',{timeZone:'UTC',month:'short',day:'numeric'});
+    const ev=evsOn(d),liveN=ev.filter(e=>e.state==='in').length;
+    return `<button class="dtab ${i===CUR?'on':''}" onclick="selectDay(${i})"><span class="d1">${top}</span><span class="d2">${sub}</span><span class="d3">${liveN?'<i class="lv"></i>':''}${ev.length} laro</span></button>`;
   }).join('');
 }
 function renderGrid(){
   const evs=evsOn(DAYS[CUR]);
   renderBest();
-  $('#grid').innerHTML=evs.length?evs.map(cardHTML).join(''):'<div class="sub" style="padding:20px">Walang laro.</div>';
+  $('#gtitle').textContent=`Mga laro · ${evs.length}`;
+  $('#grid').innerHTML=evs.length?evs.map(cardHTML).join(''):'<div class="emp">Walang laro sa araw na ito.</div>';
 }
 function setStatus(extra){
   if(extra!==undefined)STATUS_BASE=extra;
-  $('#status').textContent=STATUS_BASE+(LASTUP?` · ⟳ ${LASTUP}`:'');
+  $('#status').textContent=STATUS_BASE+(LASTUP?` · Huling update ${LASTUP}`:'');
 }
 async function loadDayTeams(i){
   const evs=evsOn(DAYS[i]);
@@ -844,9 +958,9 @@ async function selectDay(i){
   setStatus('Loading data… (mas matagal ang unang load)');
   const evs=await loadDayTeams(i);
   recordAll();
-  LASTUP=manilaTime(new Date());
-  if(CUR===i){renderGrid();setStatus(`${evs.length} laro`)}
-  renderTracker();renderSaved();
+  LASTUP=manilaTS(new Date());
+  if(CUR===i){renderGrid();setStatus('')}
+  renderTabs();renderTracker();renderSaved();
 }
 
 /* ---------- live refresh ---------- */
@@ -870,13 +984,13 @@ async function refreshLive(){
     if(sig!==LASTSIG||stale||injTick){LASTSIG=sig;renderGrid();}
     renderTabs();renderTracker();renderSaved();
     allEvents().forEach(e=>{const el=document.getElementById('lv-'+e.id);if(el)el.innerHTML=liveLine(e)});
-    LASTUP=manilaTime(new Date());setStatus();
+    LASTUP=manilaTS(new Date());setStatus();
   }catch(e){}
 }
 
 /* ---------- modal ---------- */
 function closeModal(){$('#modal').classList.remove('show')}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();toggleDrawer(false)}});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 
 const stTbl=(L,t)=>`<div><div class="th"><b>${t.abbr}</b></div>${swapHTML(L)}<table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr>
@@ -898,7 +1012,7 @@ async function openTeam(tid,evId){
   const tt=PL_DONE[tid].team,rt=returning(T);
   const oppT=oppId?M[oppId]:null;
   let html=`${ev?`<button class="back" onclick="openDetail('${evId}')">← Laro</button>`:''}
-  <div style="display:flex;align-items:center;gap:10px">${img(T.logo).replace('<img','<img style="width:38px;height:38px;object-fit:contain"')}<div><b style="font-size:18px">${T.name}</b><div class="sub">${T.w}-${T.l} · Home ${T.hw}-${T.hn-T.hw} · Road ${T.rw}-${T.rn-T.rw}</div></div></div>
+  <div style="display:flex;align-items:center;gap:10px;padding-right:40px">${img(T.logo).replace('<img','<img style="width:40px;height:40px;object-fit:contain"')}<div><b style="font-size:18px">${T.name}</b><div class="sub">${T.w}-${T.l} · Home ${T.hw}-${T.hn-T.hw} · Road ${T.rw}-${T.rn-T.rw}</div></div></div>
   <div class="st">${stat('PPG',T.pf.toFixed(1))}${stat('Opp',T.pa.toFixed(1))}${tt?stat('ORtg',tt.ortg.toFixed(1)):''}${tt?stat('DRtg',tt.drtg.toFixed(1)):''}${tt?stat('Pace',tt.pace.toFixed(1)):''}</div>`;
   html+=`<h2>Starting 5</h2>${swapHTML(L)}`;
   if(rt.names.length)html+=`<div class="sw">${rt.names.map(n=>`<span class="ij dbt">↩ ${sh(n.split(' (')[0])}</span>`).join('')}</div>`;
@@ -911,7 +1025,7 @@ async function openTeam(tid,evId){
     const oa=ev.home.id===tid?ev.away:ev.home;
     const C=cmpHTML([['Bench PTS',L.B.pts,O.B.pts,1],['Bench %',L.benchShare,O.benchShare,1,0]]);
     html+=`<div class="sub" style="margin-top:8px"><b>${T.abbr}</b> vs <b>${oa.abbr}</b></div>${C.html}`;
-  }else html+=`<div class="tiles"><div class="tile"><small>Bench PTS</small><b>${L.B.pts.toFixed(1)}</b></div><div class="tile"><small>Bench %</small><b>${L.benchShare.toFixed(0)}%</b></div></div>`;
+  }else html+=`<div class="tiles" style="grid-template-columns:1fr 1fr"><div class="tile"><small>Bench PTS</small><b>${L.B.pts.toFixed(1)}</b></div><div class="tile"><small>Bench %</small><b>${L.benchShare.toFixed(0)}%</b></div></div>`;
   html+=`<h2>Injuries</h2><div>${injChips(T)}</div>
   <h2>Huling 10 <span class="lg">${T.g.slice(-10).filter(x=>x.m>0).length}-${T.g.slice(-10).filter(x=>x.m<=0).length}</span></h2>${chipsRow(T)}`;
   $('#mbody').innerHTML=html;
@@ -929,14 +1043,13 @@ async function openDetail(id){
   const badge=ev.state==='pre'?'<span class="bd" title="Nag-a-update pa hanggang magsimula ang laro">⏳ Updating</span>'
     :`<span class="bd lk" title="Hindi na nagbabago ang pick na ito">🔒 Locked</span>${snap?.recon?' <span class="bd" title="Walang lineup/injury data dahil hindi nabuksan ang app bago ang laro">R</span>':''}`;
   const fav=pHp>=50?h:a;
-  let html=`<div style="font-size:17px;font-weight:800;padding-right:24px">${a.abbr} <span class="side inl">AWAY</span> @ ${h.abbr} <span class="side home inl">HOME</span></div>
-  <div class="sub">${manila(ev.date)} · ${badge} ${confChip(p)}</div>
+  let html=`<div style="font-size:18px;font-weight:800;padding-right:44px">${a.abbr} <span class="side away inl">AWAY</span> @ ${h.abbr} <span class="side home inl">HOME</span></div>
+  <div class="sub" style="margin-top:4px">${manilaFull(ev.date)} · ${badge} ${confChip(p)}</div>
   <div id="lv-${id}">${liveLine(ev)}</div>
-  <div style="margin:8px 0 2px"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr}</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr}</button></div>
-  ${pbar(a,h,pAp,pHp,14)}
-  <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
-  <div class="tiles"><div class="tile g"><small>Pick</small><b>${fav.abbr} -${Math.abs(p.spread).toFixed(1)}</b></div><div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div><div class="tile"><small>Total</small><b>${p.tot.toFixed(0)}</b></div></div>
-  ${oddsLine(ev)}
+  <div style="margin:10px 0 4px"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr}</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr}</button></div>
+  <div class="prob">${pbar(a,h,pAp,pHp,12)}<div class="pl"><span>${a.abbr} ${pAp}%</span><span>${pHp}% ${h.abbr}</span></div></div>
+  <div class="tiles" style="margin-top:10px"><div class="tile g"><small>Pick</small><b>${fav.abbr} -${Math.abs(p.spread).toFixed(1)}</b></div><div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div><div class="tile"><small>Total</small><b>${p.tot.toFixed(0)}</b></div></div>
+  <div style="margin-top:10px">${oddsHTML(ev)}</div>
   <h2>Mga factor <span class="lg"><span style="color:var(--aw)">◀ ${a.abbr}</span> · <span style="color:var(--hm)">${h.abbr} ▶</span></span></h2>
   ${dvRows(Object.entries(p.F).map(([k,v])=>[LABELS[k]||k,v]))}`;
 
