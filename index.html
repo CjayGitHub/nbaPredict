@@ -36,12 +36,20 @@ h1{margin:0;font-size:20px}
 nav{display:flex;gap:6px;padding:12px 16px 6px;flex-wrap:wrap}
 nav button{background:var(--card);color:var(--tx);border:1px solid var(--line);padding:7px 12px;border-radius:999px;cursor:pointer;font-size:12px}
 nav button.on{background:#2d5bff;border-color:#2d5bff}
-#status{padding:0 16px 8px;color:var(--mut);font-size:11px;min-height:16px}
+#status{padding:0 16px 6px;color:var(--mut);font-size:11px;min-height:16px}
+#best{padding:0 16px}
+.bst{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.bt{font-size:11px;font-weight:800;color:var(--warn)}
+.bp{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;cursor:pointer}
+.bp:hover{border-color:#3b5bdb}
+.bp b{color:var(--ok)}
+.bp small{color:var(--mut);font-size:10px}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;padding:0 16px 24px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;transition:.15s}
 .card:hover{border-color:#3b5bdb;transform:translateY(-2px)}
 .card.isLive{border-color:#ff6b6b88}
 .top{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:11px;margin-bottom:8px;gap:8px}
+.topl{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .teams{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .tm{flex:1;text-align:center;border-radius:10px;padding:2px}
 .tm:hover{background:var(--card2)}
@@ -70,6 +78,14 @@ nav button.on{background:#2d5bff;border-color:#2d5bff}
 .fcs{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .fc{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:1px 7px;color:var(--mut)}
 .fc b{color:var(--tx)}
+.xl{font-size:10px;color:var(--tx);margin-top:7px;line-height:1.35}
+.xl span{color:var(--mut)}
+.vg{font-size:9px;color:var(--mut);margin-top:5px;opacity:.85}
+.cf{font-size:9px;font-weight:800;letter-spacing:.05em;border-radius:5px;padding:1px 6px;background:var(--card2);color:var(--mut);white-space:nowrap}
+.cf.c2{background:#3ddc9725;color:var(--ok)}
+.cf.c1{background:#4d7cff25;color:#9db4ff}
+.cf.c0{background:var(--card2);color:var(--mut)}
+.cf.up{background:#ffb84d25;color:var(--warn)}
 .final{color:var(--warn);font-weight:700}
 .bd{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--mut);font-weight:700;display:inline-block}
 .bd.lk{color:#9db4ff;border-color:#2d5bff55}
@@ -96,6 +112,7 @@ tr.tot td{font-weight:800;color:var(--ok)}
 .cmp .bar i.w{background:var(--ok)}
 .cmp .v{font-weight:600}.cmp .v.r{text-align:right}
 .w-txt{color:var(--ok)}
+.km{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:4px}
 .tly{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-top:6px;font-size:12px}
 .dv{display:grid;grid-template-columns:84px 1fr 38px;gap:6px;align-items:center;padding:3px 0;font-size:12px}
 .dv .dl{color:var(--mut);font-size:11px}
@@ -142,8 +159,9 @@ footer{padding:0 16px 24px;color:var(--mut);font-size:10px}
 <details class="sv" id="saved"><summary id="savedSum">📌 Saved</summary><div id="savedBody"></div></details>
 <nav id="tabs"></nav>
 <div id="status"></div>
+<div id="best"></div>
 <main id="grid"></main>
-<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Naka-save sa browser mo ang picks at tracker.</footer>
+<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas odds ay pang-tingin lang at hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
 
 <script>
@@ -159,6 +177,7 @@ const KEEP_DAYS=3;
 const LG={tp:0.36,orb:0.27,tov:0.135};
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rd=x=>Math.round(x*10)/10;
 const dayIn=(d,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const fmtET=d=>dayIn(d,'America/New_York');
 const fmtMN=d=>dayIn(d,'Asia/Manila');
@@ -183,6 +202,30 @@ SAC:[38.580,-121.500,-8],SA:[29.427,-98.438,-6],TOR:[43.643,-79.379,-5],UTA:[40.
 function miles(a,b){const R=3959,r=x=>x*Math.PI/180;const dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);
   const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 
+/* ---------- Vegas odds (pang-display lang, hindi ginagamit sa prediction) ---------- */
+const ODDK='nbaOdds_v1';
+let ODDC={};try{ODDC=JSON.parse(localStorage.getItem(ODDK)||'{}')}catch(e){}
+let oddsDirty=false;
+function parseOdds(id,c,pre){
+  const o=c.odds&&c.odds[0];
+  if(pre&&o&&(o.details||o.overUnder!=null)){
+    const v={d:o.details||'',ou:o.overUnder??null,mh:o.homeTeamOdds?.moneyLine??null,ma:o.awayTeamOdds?.moneyLine??null};
+    if(JSON.stringify(ODDC[id])!==JSON.stringify(v)){ODDC[id]=v;oddsDirty=true}
+    return v;
+  }
+  return ODDC[id]||null;   // pagsimula ng laro, ang pregame line ang itinatago
+}
+const mlf=n=>n==null||n===''?'—':(+n>0?'+':'')+n;
+function oddsLine(ev){
+  const o=ev.odds;
+  if(!o)return '<div class="vg">🎰 Vegas: —</div>';
+  const parts=[];
+  if(o.d)parts.push(o.d);
+  if(o.ou!=null)parts.push('O/U '+o.ou);
+  if(o.ma!=null||o.mh!=null)parts.push(`ML ${ev.away.abbr} ${mlf(o.ma)} / ${ev.home.abbr} ${mlf(o.mh)}`);
+  return `<div class="vg">🎰 Vegas: ${parts.join(' · ')||'—'}</div>`;
+}
+
 /* ---------- saved predictions + tracker ---------- */
 const DB_KEY='nbaSaved_v2';
 let DB={snaps:{},arch:{w:0,l:0,r:[]}};
@@ -195,7 +238,7 @@ const LABELS={rating:'Rating',home:'Home court',rest:'Back-to-back',sched:'Trave
 const SH={rating:'Rating',home:'Home',rest:'B2B',sched:'Travel',form:'Form',h2h:'H2H',inj:'Injury',ret:'Return',eff:'Eff',style:'Style',split:'Split'};
 
 const mkSnap=(e,p,locked,recon)=>({
-  pred:{p:p.p,spread:p.spread,F:p.F,sH:p.sH,sA:p.sA,tot:p.tot,reasons:p.reasons,sd:p.sd,fH:p.fH,fA:p.fA,rtH:p.rtH,rtA:p.rtA,iH:p.iH,iA:p.iA},
+  pred:{p:p.p,spread:p.spread,F:p.F,sH:p.sH,sA:p.sA,tot:p.tot,reasons:p.reasons,sd:p.sd,fH:p.fH,fA:p.fA,rtH:p.rtH,rtA:p.rtA,iH:p.iH,iA:p.iA,k:p.k,ts:p.ts},
   h:e.home.abbr,a:e.away.abbr,d:e.date,mn:e.mnDay,locked,recon});
 
 function reconstruct(ev){
@@ -295,11 +338,14 @@ function parseEvent(e){
   const st=c.status||e.status;
   const dt=new Date(e.date);
   return {id:e.id,date:e.date,etDay:fmtET(dt),mnDay:fmtMN(dt),type:e.season?.type,
-    state:st.type.state,completed:st.type.completed,detail:st.type.shortDetail,home:tm(h),away:tm(a)};
+    state:st.type.state,completed:st.type.completed,detail:st.type.shortDetail,home:tm(h),away:tm(a),
+    odds:parseOdds(e.id,c,st.type.state==='pre')};
 }
 async function loadDay(d){
   try{const j=await getJSON(`${API}/scoreboard?dates=${ymd(d)}&limit=100`);
-    SCHED[d]=(j.events||[]).map(parseEvent);}catch(e){SCHED[d]??=[];}
+    SCHED[d]=(j.events||[]).map(parseEvent);
+    if(oddsDirty){oddsDirty=false;try{localStorage.setItem(ODDK,JSON.stringify(ODDC))}catch(e){}}
+  }catch(e){SCHED[d]??=[];}
 }
 async function loadPrior(){
   try{
@@ -522,6 +568,19 @@ function lineup(id){
   return {starters,bench,removed,added,isQ,outL,S,B,benchShare:(S.pts+B.pts)?B.pts/(S.pts+B.pts)*100:0,sample:d.sample,depth:d.depth};
 }
 
+/* top scorers + star player ng team (wala ang Out) */
+function scorers(id,predScore){
+  const L=lineup(id),T=M[id];if(!L||!T)return null;
+  const scale=clamp(predScore/(T.pf||112),.9,1.1);
+  const all=[...L.starters,...L.bench].map(p=>({n:p.name,pos:p.pos,pts:rd(p.ppg*scale*(L.isQ(p)?.85:1)),ppg:rd(p.ppg),rpg:rd(p.rpg),apg:rd(p.apg),
+    fg:rd(p.fgp),mpg:rd(p.mpg),q:L.isQ(p)?1:0}));
+  if(!all.length)return null;
+  const top=[...all].sort((a,b)=>b.pts-a.pts).slice(0,3);
+  const imp=x=>x.ppg+.7*(x.rpg+x.apg);
+  const star=[...all].sort((a,b)=>imp(b)-imp(a))[0];
+  return {top,star};
+}
+
 /* ---------- schedule / fatigue ---------- */
 function fatigue(id,ev){
   const prevs=allEvents().filter(e=>e.type!==1&&e.id!==ev.id&&e.date<ev.date&&(e.home.id===id||e.away.id===id))
@@ -557,7 +616,7 @@ function styleEdge(X,Y,k){
   return {t3,rb,tv};
 }
 
-/* ---------- prediction ---------- */
+/* ---------- prediction (HINDI gumagamit ng Vegas odds) ---------- */
 function predict(ev){
   const H=M[ev.home.id],A=M[ev.away.id];
   if(!H||!A)return null;
@@ -593,8 +652,23 @@ function predict(ev){
   const p=1/(1+Math.exp(-spread*0.145));
   let tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
   if(tH&&tA){const pc=(tH.pace+tA.pace)/2;const t2=pc/100*((tH.ortg+tA.drtg)/2+(tA.ortg+tH.drtg)/2);tot=(tot+t2)/2}
-  return {p,spread,F,labels:LABELS,reasons:[],sH:(tot+spread)/2,sA:(tot-spread)/2,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA};
+  const sH=(tot+spread)/2,sA=(tot-spread)/2;
+  const SA=scorers(A.id,sA),SHm=scorers(H.id,sH);
+  const ts=SA&&SHm?{a:SA.top,h:SHm.top,ka:SA.star,kh:SHm.star}:null;
+  return {p,spread,F,labels:LABELS,reasons:[],sH,sA,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA,k:Math.min(H.n,A.n),ts};
 }
+
+/* ---------- confidence label ---------- */
+function confOf(p){
+  const c=Math.max(p.p,1-p.p),k=p.k??10;
+  let tier=c>=.75?2:c>=.6?1:0;
+  if(k<4&&tier>0)tier--;
+  const side=p.p>=.5?1:-1,F=p.F||{};
+  const opp=((F.rating||0)*side<-1)||((F.form||0)*side<-1.5)||((F.eff||0)*side<-1.5);
+  const up=c<.58||opp||(k<4&&c<.7);
+  return {c,tier,lab:['TOSS-UP','LEAN','LOCK'][tier],up,k};
+}
+const confChip=p=>{const c=confOf(p);return `<span class="cf c${c.tier}" title="Confidence batay sa % at dami ng data">${c.lab}</span>${c.up?'<span class="cf up" title="Magkasalungat ang ilang factor o malapit sa 50%">⚠ UPSET</span>':''}`};
 
 /* ---------- visual helpers ---------- */
 const manila=d=>new Date(d).toLocaleString('en-PH',{timeZone:'Asia/Manila',weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
@@ -609,6 +683,7 @@ function pbar(a,h,pA,pH,ht){
   return `<div class="pbar"${ht?` style="height:${ht}px"`:''}><i style="width:${pA}%;background:${ca}"></i><i style="width:${pH}%;background:${ch}"></i></div>`;
 }
 const sh=n=>{const p=(n||'').split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):n};
+const ln=n=>{const p=(n||'').split(' ');return p.length>1?p.slice(1).join(' '):n};
 
 /* ---------- injury display ---------- */
 function injInfo(i){
@@ -641,10 +716,8 @@ function injChips(t){
   return l.slice(0,10).map(row).join('')+(l.length>10?`<div class="sub">+${l.length-10} pa</div>`:'');
 }
 
-/* huling 10: W/L chips na may score */
 const chipsRow=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
 
-/* substitution sa starting 5: Out → Pumalit */
 function swapHTML(L){
   const r=L.removed,a=L.added;
   if(!r.length&&!a.length)return '';
@@ -690,6 +763,23 @@ function liveLine(ev){
   return '';
 }
 
+/* ---------- best picks ---------- */
+function renderBest(){
+  const evs=evsOn(DAYS[CUR]),arr=[];
+  for(const e of evs){
+    const p=getPred(e);if(!p)continue;
+    const c=confOf(p);
+    arr.push({e,p,c,s:c.c+c.tier*.05-(c.up?.08:0)});
+  }
+  arr.sort((x,y)=>y.s-x.s);
+  const top=arr.slice(0,3);
+  $('#best').innerHTML=top.length?`<div class="bst"><span class="bt">⭐ Best picks</span>${top.map(({e,p,c})=>{
+    const hp=p.p>=.5,pk=hp?e.home:e.away,op=hp?e.away:e.home;
+    const res=e.state==='post'?`<span class="rs ${hp===(e.home.score>e.away.score)?'ok':'no'}">${hp===(e.home.score>e.away.score)?'✓':'✗'}</span>`:'';
+    return `<div class="bp" onclick="openDetail('${e.id}')"><b>${pk.abbr}</b><span>${Math.round(c.c*100)}%</span><small>vs ${op.abbr}</small><span class="cf c${c.tier}">${c.lab}</span>${c.up?'<span class="cf up">⚠</span>':''}${res}</div>`;
+  }).join('')}</div>`:'';
+}
+
 /* ---------- cards ---------- */
 function cardHTML(ev){
   const p=getPred(ev),h=ev.home,a=ev.away,snap=TK[ev.id];
@@ -700,6 +790,11 @@ function cardHTML(ev){
     const pH=Math.round(p.p*100),pA=100-pH,fav=pH>=50?h:a,sp=Math.abs(p.spread);
     const chips=Object.entries(p.F||{}).filter(([k,v])=>Math.abs(v)>=0.4).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1])).slice(0,3)
       .map(([k,v])=>`<span class="fc"><b>${v>0?h.abbr:a.abbr}</b> ${SH[k]||k} ${Math.abs(v).toFixed(1)}</span>`).join('');
+    let xl='';
+    if(p.ts&&p.ts.a?.[0]&&p.ts.h?.[0]){
+      const ta=p.ts.a[0],th=p.ts.h[0],best=ta.pts>=th.pts?[ta,a]:[th,h];
+      xl=`<div class="xl">🎯 <span>Top scorer:</span> <b>${sh(best[0].n)}</b> ${best[1].abbr} ~${Math.round(best[0].pts)} · ⚔ <span>Key:</span> ${ln(p.ts.ka.n)} vs ${ln(p.ts.kh.n)}</div>`;
+    }
     mid=`${pbar(a,h,pA,pH)}
     <div class="pl"><span>${a.abbr} ${pA}%</span><span>${h.abbr} ${pH}%</span></div>
     <div class="tiles">
@@ -707,19 +802,19 @@ function cardHTML(ev){
       <div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div>
       <div class="tile"><small>Total</small><b>${Math.round(p.tot)}</b></div>
     </div>
-    <div class="fcs">${chips||'<span class="fc">Pantay</span>'}</div>`;
+    <div class="fcs">${chips||'<span class="fc">Pantay</span>'}</div>${xl}`;
   }else mid='<div class="sub" style="margin-top:8px">Walang sapat na data.</div>';
   let mark='';
   if(ev.state==='post'&&p){const ok=(p.p>=.5)===(h.score>a.score);mark=`<span class="rs ${ok?'ok':'no'}">${ok?'✓':'✗'}</span> `}
   const status=ev.state==='post'?`${mark}<span class="final">FINAL</span>`
     :ev.state==='in'?`<span class="live"><i class="dot"></i>${ev.detail}</span>`:'';
   return `<div class="card ${ev.state==='in'?'isLive':''}" onclick="openDetail('${ev.id}')">
-    <div class="top"><span>${manilaT(ev.date)}${snap?.recon?' <span class="bd" title="rekonstruksyon">R</span>':''}</span><span>${status}</span></div>
+    <div class="top"><span class="topl">${manilaT(ev.date)}${snap?.recon?' <span class="bd" title="rekonstruksyon">R</span>':''}${p?confChip(p):''}</span><span>${status}</span></div>
     <div class="teams">
       <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
       <div class="at">@</div>
       <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')"><span class="side home">HOME</span>${img(h.logo)}<b>${h.abbr}</b><small>${h.record}</small>${showSc?`<div class="sc ${hLead?'lead':''}">${h.score}</div>`:''}</div>
-    </div>${mid}</div>`;
+    </div>${mid}${oddsLine(ev)}</div>`;
 }
 function renderTabs(){
   const lbl=['Ngayon','Bukas','Susunod'];
@@ -731,6 +826,7 @@ function renderTabs(){
 }
 function renderGrid(){
   const evs=evsOn(DAYS[CUR]);
+  renderBest();
   $('#grid').innerHTML=evs.length?evs.map(cardHTML).join(''):'<div class="sub" style="padding:20px">Walang laro.</div>';
 }
 function setStatus(extra){
@@ -754,7 +850,7 @@ async function selectDay(i){
 }
 
 /* ---------- live refresh ---------- */
-const signature=()=>evsOn(DAYS[CUR]).map(e=>e.id+e.state+e.away.score+'-'+e.home.score+e.detail).join('|')
+const signature=()=>evsOn(DAYS[CUR]).map(e=>e.id+e.state+e.away.score+'-'+e.home.score+e.detail+(e.odds?e.odds.d+e.odds.ou:'')).join('|')
   +'#'+allEvents().filter(e=>e.completed).length+'#'+Object.keys(TK).length+'#'+Object.values(TK).filter(s=>s.locked).length;
 async function refreshLive(){
   if(document.hidden||!DAYS.length)return;
@@ -787,6 +883,8 @@ const stTbl=(L,t)=>`<div><div class="th"><b>${t.abbr}</b></div>${swapHTML(L)}<ta
   ${L.starters.map(p=>`<tr><td><span class="pos">${p.pos}</span>${sh(p.name)}${L.isQ(p)?' <span class="q">Q</span>':''}</td><td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td></tr>`).join('')}
   <tr class="tot"><td>Total</td><td></td><td>${L.S.pts.toFixed(0)}</td><td>${L.S.reb.toFixed(0)}</td><td>${L.S.ast.toFixed(0)}</td></tr></table></div>`;
 const stat=(l,v)=>`<div class="tile"><small>${l}</small><b>${v}</b></div>`;
+const topTbl=(arr,t)=>`<div><div class="th"><b>${t.abbr}</b></div><table class="num"><tr><th></th><th>PROJ PTS</th><th>PPG</th></tr>
+  ${arr.map((x,i)=>`<tr><td><span class="pos">${x.pos}</span>${sh(x.n)}${x.q?' <span class="q">Q</span>':''}</td><td${i===0?' style="color:var(--ok);font-weight:800"':''}>${x.pts.toFixed(0)}</td><td>${x.ppg.toFixed(1)}</td></tr>`).join('')}</table></div>`;
 
 async function openTeam(tid,evId){
   const ev=findEv(evId);
@@ -832,18 +930,27 @@ async function openDetail(id){
     :`<span class="bd lk" title="Hindi na nagbabago ang pick na ito">🔒 Locked</span>${snap?.recon?' <span class="bd" title="Walang lineup/injury data dahil hindi nabuksan ang app bago ang laro">R</span>':''}`;
   const fav=pHp>=50?h:a;
   let html=`<div style="font-size:17px;font-weight:800;padding-right:24px">${a.abbr} <span class="side inl">AWAY</span> @ ${h.abbr} <span class="side home inl">HOME</span></div>
-  <div class="sub">${manila(ev.date)} · ${badge}</div>
+  <div class="sub">${manila(ev.date)} · ${badge} ${confChip(p)}</div>
   <div id="lv-${id}">${liveLine(ev)}</div>
   <div style="margin:8px 0 2px"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr}</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr}</button></div>
   ${pbar(a,h,pAp,pHp,14)}
   <div class="pl"><span>${a.abbr} ${pAp}%</span><span>${h.abbr} ${pHp}%</span></div>
   <div class="tiles"><div class="tile g"><small>Pick</small><b>${fav.abbr} -${Math.abs(p.spread).toFixed(1)}</b></div><div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div><div class="tile"><small>Total</small><b>${p.tot.toFixed(0)}</b></div></div>
+  ${oddsLine(ev)}
   <h2>Mga factor <span class="lg"><span style="color:var(--aw)">◀ ${a.abbr}</span> · <span style="color:var(--hm)">${h.abbr} ▶</span></span></h2>
   ${dvRows(Object.entries(p.F).map(([k,v])=>[LABELS[k]||k,v]))}`;
 
   if(LA&&LH){
     html+=`<h2>Starting 5</h2><div class="two">${stTbl(LA,a)}${stTbl(LH,h)}</div>
     <h2>Bench</h2>${(()=>{const C=cmpHTML([['Bench PTS',LA.B.pts,LH.B.pts,1],['Bench %',LA.benchShare,LH.benchShare,1,0]]);return C.html})()}`;
+  }
+
+  if(p.ts){
+    const ka=p.ts.ka,kh=p.ts.kh;
+    const CK=cmpHTML([['PTS',ka.ppg,kh.ppg,1],['REB',ka.rpg,kh.rpg,1],['AST',ka.apg,kh.apg,1],['FG%',ka.fg,kh.fg,1,0],['MIN',ka.mpg,kh.mpg,-1,0]]);
+    html+=`<h2>Predicted top scorers</h2><div class="two">${topTbl(p.ts.a,a)}${topTbl(p.ts.h,h)}</div>
+    <h2>Key player matchup</h2>
+    <div class="km"><div><b>${sh(ka.n)}</b><div class="sub">${a.abbr} · ${ka.pos}</div></div><span class="sub">vs</span><div style="text-align:right"><b>${sh(kh.n)}</b><div class="sub">${h.abbr} · ${kh.pos}</div></div></div>${CK.html}`;
   }
 
   html+=`<h2>Injuries</h2><div class="two"><div><b class="sub">${a.abbr}</b><div>${injChips(a)}</div></div><div><b class="sub">${h.abbr}</b><div>${injChips(h)}</div></div></div>`;
