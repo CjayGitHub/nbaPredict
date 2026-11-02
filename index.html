@@ -104,14 +104,19 @@ tr.tot td{font-weight:800;color:var(--ok)}
 .dvb .l{display:flex;justify-content:flex-end;border-right:1px solid var(--bg)}
 .dvb .l i{display:block;height:100%;background:var(--aw)}
 .dvb .r i{display:block;height:100%;background:var(--hm)}
-.ij{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;margin:2px 3px 2px 0;background:var(--card2);color:var(--mut)}
-.ij.out{background:#ff6b6b25;color:var(--bad)}.ij.dbt{background:#ffb84d25;color:var(--warn)}.ij.q{background:#ffb84d15;color:var(--warn)}.ij.in{background:#3ddc9725;color:var(--ok)}
+.ij{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;margin:2px 3px 2px 0;background:var(--card2);color:var(--mut);white-space:nowrap}
+.ij.out{background:#ff6b6b25;color:var(--bad)}.ij.dbt{background:#ffb84d25;color:var(--warn)}.ij.q{background:#ffb84d15;color:var(--warn)}.ij.ad{background:#3ddc9725;color:var(--ok)}
+.sw{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 6px}
+.sw .ij{margin:0}
+.sw .ar{color:var(--mut);font-size:12px}
 .q{color:var(--warn);font-weight:700}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .st{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}
 .st .tile b{font-size:13px}
-.th{margin-bottom:3px;font-size:12px}
-.mark{font-size:10px;color:var(--mut)}
+.th{margin-bottom:3px;font-size:13px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
+.chip.W{background:#3ddc9730;color:var(--ok)}.chip.L{background:#ff6b6b30;color:var(--bad)}
 .ir{border-top:1px solid var(--line);padding:4px 0}
 .ir:first-of-type{border-top:0}
 .ir summary{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;list-style:none;flex-wrap:wrap}
@@ -123,7 +128,7 @@ tr.tot td{font-weight:800;color:var(--ok)}
 .ig{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--tx);text-transform:capitalize}
 .is{font-size:10px;color:var(--mut);margin-left:auto}
 .is:before{content:"📰 "}
-.in{font-size:11px;color:var(--mut);padding:4px 0 2px 40px;line-height:1.35}
+.inf{font-size:11px;color:var(--mut);padding:4px 0 2px 40px;line-height:1.35}
 .ret{font-size:10px;color:var(--ok)}
 @media(max-width:560px){.two{grid-template-columns:1fr}.st{grid-template-columns:repeat(3,1fr)}}
 footer{padding:0 16px 24px;color:var(--mut);font-size:10px}
@@ -632,17 +637,24 @@ function injChips(t){
   if(!l.length)return '<span class="sub">Walang injury</span>';
   const row=i=>{const f=injInfo(i);
     const ret=i.ret?`<span class="ret">↩ ${String(i.ret).slice(0,10)}</span>`:'';
-    return `<details class="ir"><summary><span class="ib ${f.code}">${f.short}</span><b>${sh(i.name)}</b>${f.why?`<span class="ig">${f.why}</span>`:''}${ret}<span class="is">${f.tag}</span></summary>${f.text?`<div class="in">${f.text}</div>`:''}</details>`};
+    return `<details class="ir"><summary><span class="ib ${f.code}">${f.short}</span><b>${sh(i.name)}</b>${f.why?`<span class="ig">${f.why}</span>`:''}${ret}<span class="is">${f.tag}</span></summary>${f.text?`<div class="inf">${f.text}</div>`:''}</details>`};
   return l.slice(0,10).map(row).join('')+(l.length>10?`<div class="sub">+${l.length-10} pa</div>`:'');
 }
 
-function spark(t){
-  const g=t.g.slice(-10);if(!g.length)return '<span class="sub">—</span>';
-  const W=15,mid=22;
-  const bars=g.map((x,i)=>{const hh=Math.min(20,Math.abs(x.m)/30*20+2);const y=x.m>=0?mid-hh:mid;
-    return `<rect x="${i*W+2}" y="${y}" width="11" height="${hh}" rx="2" fill="${x.m>0?'#3ddc97':'#ff6b6b'}"><title>${x.pf}-${x.pa}</title></rect>`}).join('');
-  return `<svg viewBox="0 0 ${g.length*W+2} 44" width="100%" style="max-width:${g.length*W*2.4}px;display:block"><line x1="0" x2="${g.length*W+2}" y1="${mid}" y2="${mid}" stroke="#243049"/>${bars}</svg>`;
+/* huling 10: W/L chips na may score */
+const chipsRow=t=>`<div class="chips">${t.g.slice(-10).map(x=>`<span class="chip ${x.m>0?'W':'L'}">${x.m>0?'W':'L'} ${x.pf}-${x.pa}</span>`).join('')||'—'}</div>`;
+
+/* substitution sa starting 5: Out → Pumalit */
+function swapHTML(L){
+  const r=L.removed,a=L.added;
+  if(!r.length&&!a.length)return '';
+  const n=Math.max(r.length,a.length);let h='';
+  for(let i=0;i<n;i++){
+    h+=`<div class="sw">${r[i]?`<span class="ij out">✕ ${sh(r[i].name)}</span>`:''}${r[i]&&a[i]?'<span class="ar">→</span>':''}${a[i]?`<span class="ij ad">↑ ${sh(a[i].name)}</span>`:''}</div>`;
+  }
+  return h;
 }
+
 function tally(aw,hw,a,h){
   const t=(aw+hw)||1;
   return `<div class="tly"><b>${a.abbr} ${aw}</b><div class="pbar" style="height:6px;margin:0"><i style="width:${aw/t*100}%;background:var(--aw)"></i><i style="width:${hw/t*100}%;background:var(--hm)"></i></div><b>${hw} ${h.abbr}</b></div>`;
@@ -771,10 +783,9 @@ function closeModal(){$('#modal').classList.remove('show')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 
-const stTbl=(L,t)=>`<div><div class="th"><b>${t.abbr}</b></div><table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr>
+const stTbl=(L,t)=>`<div><div class="th"><b>${t.abbr}</b></div>${swapHTML(L)}<table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th></tr>
   ${L.starters.map(p=>`<tr><td><span class="pos">${p.pos}</span>${sh(p.name)}${L.isQ(p)?' <span class="q">Q</span>':''}</td><td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td></tr>`).join('')}
   <tr class="tot"><td>Total</td><td></td><td>${L.S.pts.toFixed(0)}</td><td>${L.S.reb.toFixed(0)}</td><td>${L.S.ast.toFixed(0)}</td></tr></table></div>`;
-const lineChg=L=>(L.removed.map(p=>`<span class="ij out">✕ ${sh(p.name)}</span>`).join('')+L.added.map(p=>`<span class="ij in">↑ ${sh(p.name)}</span>`).join(''));
 const stat=(l,v)=>`<div class="tile"><small>${l}</small><b>${v}</b></div>`;
 
 async function openTeam(tid,evId){
@@ -791,9 +802,9 @@ async function openTeam(tid,evId){
   let html=`${ev?`<button class="back" onclick="openDetail('${evId}')">← Laro</button>`:''}
   <div style="display:flex;align-items:center;gap:10px">${img(T.logo).replace('<img','<img style="width:38px;height:38px;object-fit:contain"')}<div><b style="font-size:18px">${T.name}</b><div class="sub">${T.w}-${T.l} · Home ${T.hw}-${T.hn-T.hw} · Road ${T.rw}-${T.rn-T.rw}</div></div></div>
   <div class="st">${stat('PPG',T.pf.toFixed(1))}${stat('Opp',T.pa.toFixed(1))}${tt?stat('ORtg',tt.ortg.toFixed(1)):''}${tt?stat('DRtg',tt.drtg.toFixed(1)):''}${tt?stat('Pace',tt.pace.toFixed(1)):''}</div>`;
-  const chg=lineChg(L)+rt.names.map(n=>`<span class="ij dbt">↩ ${sh(n.split(' (')[0])}</span>`).join('');
-  if(chg)html+=`<div>${chg}</div>`;
-  html+=`<h2>Starting 5</h2><table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG%</th><th>3P%</th></tr>
+  html+=`<h2>Starting 5</h2>${swapHTML(L)}`;
+  if(rt.names.length)html+=`<div class="sw">${rt.names.map(n=>`<span class="ij dbt">↩ ${sh(n.split(' (')[0])}</span>`).join('')}</div>`;
+  html+=`<table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG%</th><th>3P%</th></tr>
     ${L.starters.map(p=>`<tr><td><span class="pos">${p.pos}</span>${sh(p.name)}${L.isQ(p)?' <span class="q">Q</span>':''}</td><td>${p.mpg.toFixed(0)}</td><td>${p.ppg.toFixed(1)}</td><td>${p.rpg.toFixed(1)}</td><td>${p.apg.toFixed(1)}</td><td>${p.fgp.toFixed(0)}</td><td>${p.tpp.toFixed(0)}</td></tr>`).join('')}
     <tr class="tot"><td>Total</td><td></td><td>${L.S.pts.toFixed(0)}</td><td>${L.S.reb.toFixed(0)}</td><td>${L.S.ast.toFixed(0)}</td><td>${L.S.fgp.toFixed(0)}</td><td>${L.S.tpp.toFixed(0)}</td></tr></table>`;
   html+=`<h2>Bench</h2>${L.bench.length?`<table class="num"><tr><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG%</th></tr>
@@ -804,7 +815,7 @@ async function openTeam(tid,evId){
     html+=`<div class="sub" style="margin-top:8px"><b>${T.abbr}</b> vs <b>${oa.abbr}</b></div>${C.html}`;
   }else html+=`<div class="tiles"><div class="tile"><small>Bench PTS</small><b>${L.B.pts.toFixed(1)}</b></div><div class="tile"><small>Bench %</small><b>${L.benchShare.toFixed(0)}%</b></div></div>`;
   html+=`<h2>Injuries</h2><div>${injChips(T)}</div>
-  <h2>Huling 10 <span class="lg">${T.g.slice(-10).filter(x=>x.m>0).length}-${T.g.slice(-10).filter(x=>x.m<=0).length}</span></h2>${spark(T)}`;
+  <h2>Huling 10 <span class="lg">${T.g.slice(-10).filter(x=>x.m>0).length}-${T.g.slice(-10).filter(x=>x.m<=0).length}</span></h2>${chipsRow(T)}`;
   $('#mbody').innerHTML=html;
 }
 
@@ -831,10 +842,7 @@ async function openDetail(id){
   ${dvRows(Object.entries(p.F).map(([k,v])=>[LABELS[k]||k,v]))}`;
 
   if(LA&&LH){
-    html+=`<h2>Starting 5</h2>`;
-    const ch=lineChg(LA),ch2=lineChg(LH);
-    if(ch||ch2)html+=`<div style="margin-bottom:4px"><b class="sub">${a.abbr}</b> ${ch||'—'} &nbsp; <b class="sub">${h.abbr}</b> ${ch2||'—'}</div>`;
-    html+=`<div class="two">${stTbl(LA,a)}${stTbl(LH,h)}</div>
+    html+=`<h2>Starting 5</h2><div class="two">${stTbl(LA,a)}${stTbl(LH,h)}</div>
     <h2>Bench</h2>${(()=>{const C=cmpHTML([['Bench PTS',LA.B.pts,LH.B.pts,1],['Bench %',LA.benchShare,LH.benchShare,1,0]]);return C.html})()}`;
   }
 
@@ -875,7 +883,9 @@ async function openDetail(id){
     <tr><td>Close (≤5)</td><td>${A.cw}-${A.cl}</td><td>${H.cw}-${H.cl}</td></tr>
     <tr><td>Rotation (≥10 MPG)</td><td>${pA.depth||'—'}</td><td>${pH.depth||'—'}</td></tr></table>`;
 
-  html+=`<h2>Huling 10</h2><div class="two"><div><b class="sub">${a.abbr} ${A.g.slice(-10).filter(x=>x.m>0).length}-${A.g.slice(-10).filter(x=>x.m<=0).length}</b>${spark(A)}</div><div><b class="sub">${h.abbr} ${H.g.slice(-10).filter(x=>x.m>0).length}-${H.g.slice(-10).filter(x=>x.m<=0).length}</b>${spark(H)}</div></div>`;
+  html+=`<h2>Huling 10</h2>
+  <div style="margin-bottom:8px"><b class="sub">${a.abbr} ${A.g.slice(-10).filter(x=>x.m>0).length}-${A.g.slice(-10).filter(x=>x.m<=0).length}</b>${chipsRow(A)}</div>
+  <div><b class="sub">${h.abbr} ${H.g.slice(-10).filter(x=>x.m>0).length}-${H.g.slice(-10).filter(x=>x.m<=0).length}</b>${chipsRow(H)}</div>`;
   $('#mbody').innerHTML=html;
 }
 
