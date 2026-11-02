@@ -112,6 +112,19 @@ tr.tot td{font-weight:800;color:var(--ok)}
 .st .tile b{font-size:13px}
 .th{margin-bottom:3px;font-size:12px}
 .mark{font-size:10px;color:var(--mut)}
+.ir{border-top:1px solid var(--line);padding:4px 0}
+.ir:first-of-type{border-top:0}
+.ir summary{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;list-style:none;flex-wrap:wrap}
+.ir summary::-webkit-details-marker{display:none}
+.ib{font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;min-width:34px;text-align:center;background:var(--card2);color:var(--mut)}
+.ib.out{background:#ff6b6b25;color:var(--bad)}
+.ib.dbt{background:#ffb84d25;color:var(--warn)}
+.ib.dtd,.ib.q{background:#ffb84d15;color:var(--warn)}
+.ig{font-size:10px;background:var(--card2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--tx);text-transform:capitalize}
+.is{font-size:10px;color:var(--mut);margin-left:auto}
+.is:before{content:"📰 "}
+.in{font-size:11px;color:var(--mut);padding:4px 0 2px 40px;line-height:1.35}
+.ret{font-size:10px;color:var(--ok)}
 @media(max-width:560px){.two{grid-template-columns:1fr}.st{grid-template-columns:repeat(3,1fr)}}
 footer{padding:0 16px 24px;color:var(--mut);font-size:10px}
 </style>
@@ -301,7 +314,8 @@ async function loadInj(){
   try{
     const j=await getJSON(`${API}/injuries`);const out={};
     (j.injuries||[]).forEach(t=>{
-      const list=(t.injuries||[]).map(i=>({id:String(i.athlete?.id||''),name:i.athlete?.displayName||'?',status:i.status||'',note:i.shortComment||''}));
+      const list=(t.injuries||[]).map(i=>({id:String(i.athlete?.id||''),name:i.athlete?.displayName||'?',status:i.status||'',
+        note:i.shortComment||'',long:i.longComment||'',part:i.details?.type||i.details?.location||'',ret:i.details?.returnDate||''}));
       out[String(t.id)]=list;out[t.displayName]=list;
     });
     return out;
@@ -590,14 +604,38 @@ function pbar(a,h,pA,pH,ht){
   return `<div class="pbar"${ht?` style="height:${ht}px"`:''}><i style="width:${pA}%;background:${ca}"></i><i style="width:${pH}%;background:${ch}"></i></div>`;
 }
 const sh=n=>{const p=(n||'').split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):n};
+
+/* ---------- injury display ---------- */
+function injInfo(i){
+  const t=((i.note||'')+' '+(i.long||'')).replace(/\s+/g,' ').trim(),low=t.toLowerCase();
+  let why=(i.part||'').trim();
+  if(!why){const m=(i.note||'').match(/\(([^)]{2,25})\)/);if(m)why=m[1]}
+  if(!why){const kw=[['g league','G League'],['trade','Trade talks'],['personal','Personal'],['surgery','Surgery'],['suspen','Suspension'],
+    ['illness','Illness'],['conditioning','Conditioning'],['not ready','Not ready'],['rehab','Rehab'],['rest','Rest']];
+    for(const [k,v] of kw)if(low.includes(k)){why=v;break}}
+  let who='',src='';
+  let m=t.match(/([A-Z][\w.'-]+(?: [A-Z][\w.'-]+){1,2}) of (The [A-Z]\w+|[A-Za-z0-9]+(?:\.[a-z]+)?) reports?/);
+  if(m){who=m[1];src=m[2]}
+  else if((m=t.match(/per ([A-Z][\w.'-]+(?: [A-Z][\w.'-]+){1,2}) of (The [A-Z]\w+|[A-Za-z0-9]+(?:\.[a-z]+)?)/))){who=m[1];src=m[2]}
+  else if((m=t.match(/([A-Z][a-z]+ [A-Z][a-z]+) reports/))){who=m[1]}
+  src=src.replace(/\.com$/i,'');
+  const s=(i.status||'').toLowerCase();
+  const code=s.includes('out')?'out':s.includes('doubt')?'dbt':s.includes('day')?'dtd':'q';
+  const short={out:'OUT',dbt:'DBT',dtd:'DTD',q:'Q'}[code];
+  const tag=src?(who?`${src} · ${sh(who)}`:src):(who?sh(who):'ESPN');
+  return {code,short,why,tag,text:(i.note||i.long||'').slice(0,230)};
+}
 function injChips(t){
   const d=PL_DONE[t.id];
   const l=injOf(t).filter(i=>SEV(i.status)>0).map(i=>({...i,sv:SEV(i.status),ppg:(d?.players.find(x=>x.id===i.id||x.name===i.name)?.ppg)??-1}))
     .sort((a,b)=>b.sv-a.sv||b.ppg-a.ppg);
-  if(!l.length)return '<span class="sub">—</span>';
-  return l.slice(0,6).map(i=>`<span class="ij ${i.sv>=1?'out':i.sv>=.8?'dbt':'q'}" title="${(i.status+' · '+(i.note||'')).replace(/"/g,'&quot;')}">${sh(i.name)}</span>`).join('')
-    +(l.length>6?`<span class="ij">+${l.length-6}</span>`:'');
+  if(!l.length)return '<span class="sub">Walang injury</span>';
+  const row=i=>{const f=injInfo(i);
+    const ret=i.ret?`<span class="ret">↩ ${String(i.ret).slice(0,10)}</span>`:'';
+    return `<details class="ir"><summary><span class="ib ${f.code}">${f.short}</span><b>${sh(i.name)}</b>${f.why?`<span class="ig">${f.why}</span>`:''}${ret}<span class="is">${f.tag}</span></summary>${f.text?`<div class="in">${f.text}</div>`:''}</details>`};
+  return l.slice(0,10).map(row).join('')+(l.length>10?`<div class="sub">+${l.length-10} pa</div>`:'');
 }
+
 function spark(t){
   const g=t.g.slice(-10);if(!g.length)return '<span class="sub">—</span>';
   const W=15,mid=22;
@@ -625,7 +663,7 @@ function cmpHTML(rows){
   }).join('');
   return {html,aw,hw};
 }
-function dvRows(items){   // [label, value(+ = home)]
+function dvRows(items){
   return items.map(([l,v])=>{
     const w=Math.min(100,Math.abs(v)/6*100);
     return `<div class="dv"><span class="dl">${l}</span><div class="dvb"><div class="l">${v<0?`<i style="width:${w}%"></i>`:''}</div><div class="r">${v>0?`<i style="width:${w}%"></i>`:''}</div></div>
