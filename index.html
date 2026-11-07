@@ -33,7 +33,7 @@ button{font-family:inherit;color:inherit}
 .sbtn:hover{border-color:var(--acc);background:var(--card2)}
 .sbtn b{background:var(--acc);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;min-width:20px;text-align:center}
 .strip{max-width:1180px;margin:0 auto;padding:0 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pill{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--tx2);font-weight:600;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--tx2);font-weight:600;white-space:nowrap;cursor:default}
 .pill i{font-style:normal;color:var(--mut);font-weight:500}
 .pill .live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(52,211,153,.18)}
 .dots{display:inline-flex;gap:3px;margin-left:2px}
@@ -96,7 +96,6 @@ button{font-family:inherit;color:inherit}
 .pbar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line);gap:2px}
 .pbar i{display:block;height:100%;border-radius:99px}
 .pl{display:flex;justify-content:space-between;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
-.pl span small{font-weight:500;color:var(--mut);font-size:11px;margin:0 4px}
 .tiles{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
 .tile{background:var(--card2);border:1px solid var(--line);border-radius:var(--r2);padding:8px 10px;text-align:center}
 .tile small{display:block;color:var(--mut);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
@@ -118,6 +117,8 @@ button{font-family:inherit;color:inherit}
 .vgl{font-size:9px;letter-spacing:.14em;font-weight:800;color:var(--mut);background:var(--card2);border-radius:5px;padding:2px 6px}
 .vc{font-size:11px;color:var(--tx2);font-weight:600;display:inline-flex;align-items:baseline;gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-variant-numeric:tabular-nums}
 .vc small{font-size:9px;color:var(--mut);font-weight:600;letter-spacing:.06em}
+.vc.ag{color:var(--ok);border-color:rgba(52,211,153,.35)}
+.vc.dg{color:var(--warn);border-color:rgba(251,191,36,.4)}
 .vgn{font-size:11px;color:var(--mut)}
 
 /* badges */
@@ -147,7 +148,7 @@ button{font-family:inherit;color:inherit}
 .dh p{margin:2px 0 0;font-size:11px;color:var(--mut)}
 .xb{background:var(--card);border:1px solid var(--line2);border-radius:10px;width:34px;height:34px;font-size:18px;cursor:pointer}
 .xb:hover{background:var(--card2)}
-#savedBody{overflow:auto;padding:6px 16px 24px;flex:1}
+.dscroll{overflow:auto;padding:10px 16px 24px;flex:1}
 .dy{margin-top:14px}
 .dy>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12px;font-weight:700;color:var(--tx2)}
 .dy>summary::-webkit-details-marker{display:none}
@@ -165,6 +166,19 @@ button{font-family:inherit;color:inherit}
 .pcs em{font-style:normal;font-weight:800;font-size:12px;width:34px;text-align:right}
 .pcs u{display:block;width:40px;height:5px;background:var(--line);border-radius:9px;overflow:hidden;text-decoration:none}
 .pcs u i{display:block;height:100%;background:var(--ok)}
+
+/* ===== Accuracy lab ===== */
+.lab{padding:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r2);margin-bottom:4px}
+.lab h4{margin:0 0 8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.lab table{margin-bottom:10px}
+.lab td,.lab th{font-size:12px}
+.lab .note{font-size:10.5px;color:var(--mut);margin-top:6px}
+.cal{display:grid;grid-template-columns:54px 1fr 92px;gap:8px;align-items:center;font-size:11px;margin:6px 0;color:var(--tx2)}
+.cb{position:relative;height:8px;background:var(--line);border-radius:9px}
+.cb i{position:absolute;left:0;top:0;bottom:0;background:var(--ok);border-radius:9px}
+.cb u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn);text-decoration:none}
+.lgd{display:flex;gap:12px;font-size:10px;color:var(--mut);margin-top:4px}
+.lgd b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
 
 /* ===== Modal ===== */
 #modal{position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px;z-index:60}
@@ -262,12 +276,12 @@ footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;color:var(--mut);font-
   <main id="grid"></main>
 </div>
 
-<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas line ay reference lang at hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
+<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas line ay reference at pang-benchmark lang, hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
 
 <div id="ov" onclick="toggleDrawer(false)"></div>
 <aside id="drawer">
-  <div class="dh"><div><h3>📌 Saved predictions</h3><p>Naka-lock pagsimula ng laro · nabubura pagkalipas ng 3 araw</p></div><button class="xb" onclick="toggleDrawer(false)">×</button></div>
-  <div id="savedBody"></div>
+  <div class="dh"><div><h3>📌 Saved & Accuracy</h3><p>Naka-lock pagsimula ng laro · nabubura pagkalipas ng 3 araw</p></div><button class="xb" onclick="toggleDrawer(false)">×</button></div>
+  <div class="dscroll"><div id="statsBody"></div><div id="savedBody"></div></div>
 </aside>
 
 <div id="modal"><div class="sheet"><button class="x" onclick="closeModal()">×</button><div id="mbody"></div></div></div>
@@ -276,12 +290,17 @@ footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;color:var(--mut);font-
 const API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const API2='https://site.api.espn.com/apis/v2/sports/basketball/nba';
 const SEASON_START='2026-10-15';
-const PRIOR_SEASON=2026;
+const PRIOR_SEASON=2026;            // 2025-26
+const PRIOR_WEIGHTS=[.55,.30,.15];  // huling 3 season (pinakamabigat ang pinakabago)
+const PRIOR_REGRESS=0.7;            // regression papunta sa average
+const PRIOR_K=10;                   // bigat ng prior = parang 10 laro
 const HCA=2.5;
 const REFRESH_MS=20000;
 const SAMPLE=15;
 const RECENT=5;
 const KEEP_DAYS=3;
+const CAL_MIN=0.70,CAL_MAX=0.82,CAL_GAMES=20;   // calibration: mas malakas ang shrink kapag kaunti pa ang laro
+const P_MIN=0.08,P_MAX=0.90;                    // hangganan ng win probability
 const LG={tp:0.36,orb:0.27,tov:0.135};
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -293,6 +312,7 @@ const ymd=s=>s.replace(/-/g,'');
 const addDays=(s,n)=>{const d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 const getJSON=async u=>{const r=await fetch(u);if(!r.ok)throw new Error(r.status+' '+u);return r.json()};
 const f1=x=>(x>=0?'+':'')+x.toFixed(1);
+const pct=x=>Math.round(x*100);
 
 let SCHED={}, M={}, INJ={}, PL={}, PL_N={}, PRIOR={}, CUR=0, DAYS=[], STATUS_BASE='', LASTUP='', LASTSIG='', TICK=0;
 let PL_DONE={};
@@ -319,7 +339,7 @@ SAC:[38.580,-121.500,-8],SA:[29.427,-98.438,-6],TOR:[43.643,-79.379,-5],UTA:[40.
 function miles(a,b){const R=3959,r=x=>x*Math.PI/180;const dl=r(b[0]-a[0]),dn=r(b[1]-a[1]);
   const h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 
-/* ---------- Vegas odds (display lang, hindi ginagamit sa prediction) ---------- */
+/* ---------- Vegas odds (benchmark lang, hindi ginagamit sa prediction) ---------- */
 const ODDK='nbaOdds_v1';
 let ODDC={};try{ODDC=JSON.parse(localStorage.getItem(ODDK)||'{}')}catch(e){}
 let oddsDirty=false;
@@ -333,19 +353,35 @@ function parseOdds(id,c,pre){
   return ODDC[id]||null;
 }
 const mlf=n=>n==null||n===''?'—':(+n>0?'+':'')+n;
-function oddsHTML(ev){
+const imp=m=>{m=+m;if(!m)return null;return m<0?-m/(-m+100):100/(m+100)};
+// Sino ang paborito ng Vegas? fh=1 kung home. p = probability ng home (no-vig) kung may moneyline
+function vegasOf(ev){
+  const o=ev.odds;if(!o)return null;
+  const ph=imp(o.mh),pa=imp(o.ma);
+  if(ph!=null&&pa!=null&&ph!==pa)return {fh:ph>pa?1:0,p:ph/(ph+pa)};
+  const m=(o.d||'').match(/^([A-Z]+)\s*([+-]?\d+(?:\.\d+)?)/);
+  if(m){const n=parseFloat(m[2]);
+    if(m[1]===ev.home.abbr)return {fh:n<0?1:0,p:null};
+    if(m[1]===ev.away.abbr)return {fh:n<0?0:1,p:null};}
+  return null;
+}
+function oddsHTML(ev,p){
   const o=ev.odds;
   if(!o)return '<div class="vg"><span class="vgl">VEGAS</span><span class="vgn">Walang line</span></div>';
+  const v=vegasOf(ev);let chip='';
+  if(v&&p){chip=((p.p>=.5?1:0)===v.fh)?'<span class="vc ag" title="Pareho ang paborito ng model at Vegas">Model = Vegas</span>'
+    :'<span class="vc dg" title="Magkaiba ang pinili ng model at Vegas">Model ≠ Vegas</span>'}
   return `<div class="vg"><span class="vgl">VEGAS</span>
     ${o.d?`<span class="vc"><small>SPR</small>${o.d}</span>`:''}
     ${o.ou!=null?`<span class="vc"><small>O/U</small>${o.ou}</span>`:''}
-    ${(o.ma!=null||o.mh!=null)?`<span class="vc"><small>ML</small>${mlf(o.ma)} / ${mlf(o.mh)}</span>`:''}</div>`;
+    ${(o.ma!=null||o.mh!=null)?`<span class="vc"><small>ML</small>${mlf(o.ma)} / ${mlf(o.mh)}</span>`:''}${chip}</div>`;
 }
 
-/* ---------- saved predictions + tracker ---------- */
+/* ---------- saved predictions + tracker + accuracy lab ---------- */
 const DB_KEY='nbaSaved_v2';
-let DB={snaps:{},arch:{w:0,l:0,r:[]}};
-try{const x=JSON.parse(localStorage.getItem(DB_KEY)||'null');if(x&&x.snaps)DB={snaps:x.snaps,arch:x.arch||{w:0,l:0,r:[]}}}catch(e){}
+const newArch=()=>({w:0,l:0,r:[],bs:0,bn:0,vn:0,vmw:0,vw:0,vbn:0,mbs:0,vbs:0,dn:0,dmw:0,dvw:0,cb:[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]});
+let DB={snaps:{},arch:newArch()};
+try{const x=JSON.parse(localStorage.getItem(DB_KEY)||'null');if(x&&x.snaps)DB={snaps:x.snaps,arch:Object.assign(newArch(),x.arch||{})}}catch(e){}
 const TK=DB.snaps;
 const saveDB=()=>{try{localStorage.setItem(DB_KEY,JSON.stringify(DB))}catch(e){}};
 
@@ -354,7 +390,7 @@ const LABELS={rating:'Rating',home:'Home court',rest:'Back-to-back',sched:'Trave
 const SH={rating:'Rating',home:'Home',rest:'B2B',sched:'Travel',form:'Form',h2h:'H2H',inj:'Injury',ret:'Return',eff:'Eff',style:'Style',split:'Split'};
 
 const mkSnap=(e,p,locked,recon)=>({
-  pred:{p:p.p,spread:p.spread,F:p.F,sH:p.sH,sA:p.sA,tot:p.tot,reasons:p.reasons,sd:p.sd,fH:p.fH,fA:p.fA,rtH:p.rtH,rtA:p.rtA,iH:p.iH,iA:p.iA,k:p.k,ts:p.ts},
+  pred:{p:p.p,pr:p.pr,cal:p.cal,spread:p.spread,F:p.F,sH:p.sH,sA:p.sA,tot:p.tot,reasons:p.reasons,sd:p.sd,fH:p.fH,fA:p.fA,rtH:p.rtH,rtA:p.rtA,iH:p.iH,iA:p.iA,k:p.k,ts:p.ts},
   h:e.home.abbr,a:e.away.abbr,d:e.date,mn:e.mnDay,locked,recon});
 
 function reconstruct(ev){
@@ -369,6 +405,26 @@ function getPred(ev){
   const s=TK[ev.id];
   return s?{...s.pred,labels:LABELS}:null;
 }
+
+// idagdag ang isang tapos na laro sa stats S
+function addStat(S,s){
+  const y=s.hs>s.as?1:0,p=s.pred.p,ok=((p>=.5)?1:0)===y;
+  S.bs+=(p-y)**2;S.bn++;
+  const conf=Math.max(p,1-p),bi=conf<.6?0:conf<.7?1:conf<.8?2:3;
+  S.cb[bi][0]++;S.cb[bi][1]+=conf;S.cb[bi][2]+=ok?1:0;
+  if(s.v){
+    S.vn++;if(ok)S.vmw++;
+    if((s.v.fh?y===1:y===0))S.vw++;
+    if(s.v.p!=null){S.vbn++;S.mbs+=(p-y)**2;S.vbs+=(s.v.p-y)**2}
+    if(((p>=.5)?1:0)!==s.v.fh){S.dn++;if(ok)S.dmw++;else S.dvw++}
+  }
+}
+function computeStats(){
+  const S=JSON.parse(JSON.stringify(DB.arch));
+  for(const id in TK){const s=TK[id];if(s.fin)addStat(S,s)}
+  return S;
+}
+
 function recordAll(){
   let ch=false;
   const today=fmtMN(new Date()),cut=addDays(today,-KEEP_DAYS);
@@ -385,12 +441,13 @@ function recordAll(){
       else{const p=reconstruct(e);if(p){TK[e.id]=mkSnap(e,p,true,true);ch=true}}
     }
     const s=TK[e.id];
+    if(s&&!(s.fin&&s.v)){const v=vegasOf(e);if(v&&JSON.stringify(v)!==JSON.stringify(s.v)){s.v=v;ch=true}}
     if(s&&e.completed&&!s.fin){s.fin=1;s.as=e.away.score;s.hs=e.home.score;ch=true}
   }
   for(const id in TK){
     const s=TK[id];
     if(s.mn<cut){
-      if(s.fin){const ok=(s.pred.p>=.5)===(s.hs>s.as);ok?DB.arch.w++:DB.arch.l++;DB.arch.r.push(ok?1:0);DB.arch.r=DB.arch.r.slice(-10)}
+      if(s.fin){const ok=(s.pred.p>=.5)===(s.hs>s.as);ok?DB.arch.w++:DB.arch.l++;DB.arch.r.push(ok?1:0);DB.arch.r=DB.arch.r.slice(-10);addStat(DB.arch,s)}
       delete TK[id];ch=true;
     }
   }
@@ -408,9 +465,33 @@ function trackStats(){
   return {w,l,n:w+l,seq};
 }
 function renderTracker(){
-  const s=trackStats();
-  $('#trk').innerHTML=s.n?`<span class="pill">🎯 <b>${s.w}-${s.l}</b> <i>${Math.round(s.w/s.n*100)}% accuracy</i><span class="dots">${s.seq.map(x=>`<i class="dt ${x?'ok':'no'}"></i>`).join('')}</span></span>`
+  const s=trackStats(),S=computeStats();
+  const br=S.bn?`<i title="Brier score: mas mababa ay mas maganda. 0.250 = parang hula lang (50/50)">Brier ${(S.bs/S.bn).toFixed(3)}</i>`:'';
+  $('#trk').innerHTML=s.n?`<span class="pill">🎯 <b>${s.w}-${s.l}</b> <i>${Math.round(s.w/s.n*100)}%</i>${br}<span class="dots">${s.seq.map(x=>`<i class="dt ${x?'ok':'no'}"></i>`).join('')}</span></span>`
     :'<span class="pill">🎯 <b>0-0</b> <i>accuracy</i></span>';
+}
+function renderStats(){
+  const S=computeStats();
+  if(!S.bn){$('#statsBody').innerHTML='<div class="lab"><h4>Accuracy lab</h4><div class="sub">Walang tapos na laro pa para masukat.</div></div>';return}
+  const brier=S.bs/S.bn;
+  let html=`<div class="lab"><h4>Accuracy lab · ${S.bn} laro</h4>
+    <table class="num"><tr><th></th><th>Model</th><th>Vegas</th></tr>`;
+  if(S.vn){
+    html+=`<tr><td>Tamang pick (${S.vn} laro)</td><td${S.vmw>=S.vw?' class="w-txt"':''}>${S.vmw}-${S.vn-S.vmw} · ${pct(S.vmw/S.vn)}%</td><td${S.vw>S.vmw?' class="w-txt"':''}>${S.vw}-${S.vn-S.vw} · ${pct(S.vw/S.vn)}%</td></tr>`;
+    if(S.vbn)html+=`<tr><td>Brier (${S.vbn} laro, mas mababa = mas maganda)</td><td${S.mbs<=S.vbs?' class="w-txt"':''}>${(S.mbs/S.vbn).toFixed(3)}</td><td${S.vbs<S.mbs?' class="w-txt"':''}>${(S.vbs/S.vbn).toFixed(3)}</td></tr>`;
+    if(S.dn)html+=`<tr><td>Kapag magkaiba ang pick (${S.dn})</td><td${S.dmw>=S.dvw?' class="w-txt"':''}>${S.dmw} panalo</td><td${S.dvw>S.dmw?' class="w-txt"':''}>${S.dvw} panalo</td></tr>`;
+  }else html+=`<tr><td>Brier (lahat)</td><td>${brier.toFixed(3)}</td><td>—</td></tr>`;
+  html+=`</table>`;
+  const names=['50–60%','60–70%','70–80%','80%+'];
+  html+=`<h4>Calibration · tugma ba ang % sa totoong resulta?</h4>`;
+  S.cb.forEach((b,i)=>{
+    if(!b[0])return;
+    const pr=b[1]/b[0]*100,ac=b[2]/b[0]*100;
+    html+=`<div class="cal"><span>${names[i]}</span><div class="cb"><i style="width:${ac}%"></i><u style="left:calc(${pr}% - 1px)"></u></div><span>real ${Math.round(ac)}% · ${b[0]} laro</span></div>`;
+  });
+  html+=`<div class="lgd"><span><b style="background:var(--ok)"></b>Aktwal na panalo</span><span><b style="background:var(--warn)"></b>Sinabi ng model</span></div>
+    <div class="note">Brier overall ${brier.toFixed(3)} (0.250 = hula lang). ${S.bn<100?'Maliit pa ang sample (wala pang 100 laro), kaya puwedeng malayo sa totoo.':''} Kasama sa bilang ang mga lumang pick bago ang calibration.</div></div>`;
+  $('#statsBody').innerHTML=html;
 }
 function toggleDrawer(on){$('#drawer').classList.toggle('show',on);$('#ov').classList.toggle('show',on)}
 function togDay(d,o){OPEN[d]=o}
@@ -442,6 +523,7 @@ function renderSaved(){
   }
   $('#savedCnt').textContent=n;
   $('#savedBody').innerHTML=html||'<div class="emp">Wala pang naka-save na prediction.</div>';
+  renderStats();
 }
 
 /* ---------- parsing ---------- */
@@ -462,19 +544,31 @@ async function loadDay(d){
     if(oddsDirty){oddsDirty=false;try{localStorage.setItem(ODDK,JSON.stringify(ODDC))}catch(e){}}
   }catch(e){SCHED[d]??=[];}
 }
-async function loadPrior(){
+async function loadPriorSeason(season){
   try{
-    const j=await getJSON(`${API2}/standings?season=${PRIOR_SEASON}`);const out={};
+    const j=await getJSON(`${API2}/standings?season=${season}`);const out={};
     const walk=n=>{
       (n.standings?.entries||[]).forEach(e=>{
         const st={};(e.stats||[]).forEach(s=>st[s.name]=s.value);
         let d=st.differential??st.pointDifferential??st.pointsDiff;const gp=st.gamesPlayed||82;
-        if(d!=null)out[String(e.team.id)]=(Math.abs(d)>25?d/gp:d)*0.6;
+        if(d!=null)out[String(e.team.id)]=(Math.abs(d)>25?d/gp:d);
       });
       (n.children||[]).forEach(walk);
     };
-    walk(j);return out;
-  }catch(e){return {}}
+    walk(j);return Object.keys(out).length?out:null;
+  }catch(e){return null}
+}
+// Panimulang rating: weighted average ng huling 3 season (kung available), may regression
+async function loadPrior(){
+  const res=await Promise.all(PRIOR_WEIGHTS.map((w,i)=>loadPriorSeason(PRIOR_SEASON-i)));
+  const ids=new Set();res.forEach(r=>r&&Object.keys(r).forEach(k=>ids.add(k)));
+  const out={};
+  for(const id of ids){
+    let s=0,ws=0;
+    res.forEach((r,i)=>{if(r&&r[id]!=null){s+=r[id]*PRIOR_WEIGHTS[i];ws+=PRIOR_WEIGHTS[i]}});
+    if(ws)out[id]=(s/ws)*PRIOR_REGRESS;
+  }
+  return out;
 }
 async function loadInj(){
   try{
@@ -515,7 +609,7 @@ function buildModel(games){
   }
   const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
   for(const i of ids){
-    const t=T[i],n=t.g.length,w=n/(n+10);
+    const t=T[i],n=t.g.length,w=n/(n+PRIOR_K);
     t.n=n;t.srs=r[i];t.elo=elo[i];t.eloPts=(elo[i]-1500)/25;
     t.str=0.5*(w*r[i]+(1-w)*t.prior)+0.5*t.eloPts;
     t.pf=n?t.g.reduce((s,x)=>s+x.pf,0)/n:112;
@@ -689,12 +783,12 @@ function scorers(id,predScore){
     fg:rd(p.fgp),mpg:rd(p.mpg),q:L.isQ(p)?1:0}));
   if(!all.length)return null;
   const top=[...all].sort((a,b)=>b.pts-a.pts).slice(0,3);
-  const imp=x=>x.ppg+.7*(x.rpg+x.apg);
-  const star=[...all].sort((a,b)=>imp(b)-imp(a))[0];
+  const imp2=x=>x.ppg+.7*(x.rpg+x.apg);
+  const star=[...all].sort((a,b)=>imp2(b)-imp2(a))[0];
   return {top,star};
 }
 
-/* ---------- schedule / fatigue ---------- */
+/* ---------- schedule / fatigue (na-tune base sa research) ---------- */
 function fatigue(id,ev){
   const prevs=allEvents().filter(e=>e.type!==1&&e.id!==ev.id&&e.date<ev.date&&(e.home.id===id||e.away.id===id))
     .sort((a,b)=>a.date.localeCompare(b.date));
@@ -715,8 +809,11 @@ function fatigue(id,ev){
   else if(n6>=4){out.pts+=.6;out.tags.push('4 laro sa 6 gabi')}
   if(out.b2b&&out.mi>600){out.pts+=.5;out.tags.push(`${Math.round(out.mi)} mi biyahe sa back-to-back`)}
   else if(out.mi>1500&&out.rest<=1){out.pts+=.4;out.tags.push(`${Math.round(out.mi)} mi biyahe`)}
-  if(trip>=4){out.pts+=Math.min(1.5,.35*(trip-3));out.tags.push(`road game #${trip} sa trip`)}
+  // road trip: ang ika-5 na sunod na road game pataas lang ang malinaw na mas mababa ang win rate
+  if(trip>=5){out.pts+=Math.min(1.5,.5*(trip-4));out.tags.push(`road game #${trip} sa trip`)}
   if(Math.abs(out.tz)>=2&&out.rest<=1){out.pts+=out.tz>0?.5:.3;out.tags.push(`timezone ${out.tz>0?'+':''}${out.tz}h`)}
+  // sobrang tagal na pahinga (3-6 araw): bahagyang "kinakalawang"
+  if(out.rest>=3&&out.rest<=6){out.pts+=.3;out.tags.push(`${out.rest} araw na pahinga (rust)`)}
   return out;
 }
 
@@ -762,13 +859,17 @@ function predict(ev){
     eff,style,split
   };
   const spread=Object.values(F).reduce((a,b)=>a+b,0);
-  const p=1/(1+Math.exp(-spread*0.145));
+  const k=Math.min(H.n,A.n);
+  // Calibration: ibinababa ang sobrang kumpiyansa (mas malakas kapag kaunti pa ang laro)
+  const pr=1/(1+Math.exp(-spread*0.145));
+  const cal=CAL_MIN+(CAL_MAX-CAL_MIN)*Math.min(1,k/CAL_GAMES);
+  const p=clamp(1/(1+Math.exp(-spread*0.145*cal)),P_MIN,P_MAX);
   let tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
   if(tH&&tA){const pc=(tH.pace+tA.pace)/2;const t2=pc/100*((tH.ortg+tA.drtg)/2+(tA.ortg+tH.drtg)/2);tot=(tot+t2)/2}
   const sH=(tot+spread)/2,sA=(tot-spread)/2;
   const SA=scorers(A.id,sA),SHm=scorers(H.id,sH);
   const ts=SA&&SHm?{a:SA.top,h:SHm.top,ka:SA.star,kh:SHm.star}:null;
-  return {p,spread,F,labels:LABELS,reasons:[],sH,sA,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA,k:Math.min(H.n,A.n),ts};
+  return {p,pr,cal,spread,F,labels:LABELS,reasons:[],sH,sA,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA,k,ts};
 }
 
 /* ---------- confidence label ---------- */
@@ -906,7 +1007,7 @@ function cardHTML(ev){
       xl=`<div class="xl"><div class="xi"><small>🎯 Top scorer</small><b>${sh(best[0].n)}</b> <span>${best[1].abbr} · ~${Math.round(best[0].pts)} pts</span></div>
         <div class="xi"><small>⚔ Key matchup</small><b>${ln(p.ts.ka.n)}</b> <span>vs</span> <b>${ln(p.ts.kh.n)}</b></div></div>`;
     }
-    mid=`<div class="prob">${pbar(a,h,pA,pH)}<div class="pl"><span>${a.abbr}<small></small>${pA}%</span><span>${pH}% ${h.abbr}</span></div></div>
+    mid=`<div class="prob">${pbar(a,h,pA,pH)}<div class="pl"><span>${a.abbr} ${pA}%</span><span>${pH}% ${h.abbr}</span></div></div>
     <div class="tiles">
       <div class="tile g"><small>${ev.state==='pre'?'Pick':'🔒 Pick'}</small><b>${fav.abbr} -${sp.toFixed(1)}</b><div class="cfw">${confChip(p)}</div></div>
       <div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div>
@@ -925,7 +1026,7 @@ function cardHTML(ev){
       <div class="tm" onclick="event.stopPropagation();openTeam('${a.id}','${ev.id}')"><span class="side away">AWAY</span>${img(a.logo)}<b>${a.abbr}</b><small>${a.record||'&nbsp;'}</small>${showSc?`<div class="sc ${aLead?'lead':''}">${a.score}</div>`:''}</div>
       <div class="vs">@</div>
       <div class="tm" onclick="event.stopPropagation();openTeam('${h.id}','${ev.id}')"><span class="side home">HOME</span>${img(h.logo)}<b>${h.abbr}</b><small>${h.record||'&nbsp;'}</small>${showSc?`<div class="sc ${hLead?'lead':''}">${h.score}</div>`:''}</div>
-    </div>${mid}${oddsHTML(ev)}</div>`;
+    </div>${mid}${oddsHTML(ev,p)}</div>`;
 }
 function renderTabs(){
   const lbl=['Ngayon','Bukas'];
@@ -1043,13 +1144,14 @@ async function openDetail(id){
   const badge=ev.state==='pre'?'<span class="bd" title="Nag-a-update pa hanggang magsimula ang laro">⏳ Updating</span>'
     :`<span class="bd lk" title="Hindi na nagbabago ang pick na ito">🔒 Locked</span>${snap?.recon?' <span class="bd" title="Walang lineup/injury data dahil hindi nabuksan ang app bago ang laro">R</span>':''}`;
   const fav=pHp>=50?h:a;
+  const calNote=p.pr!=null?`<div class="sub" style="margin-top:6px">Calibrated: ${Math.max(pHp,pAp)}% <span title="Bago ibaba ang sobrang kumpiyansa">(raw ${Math.round(Math.max(p.pr,1-p.pr)*100)}%)</span></div>`:'';
   let html=`<div style="font-size:18px;font-weight:800;padding-right:44px">${a.abbr} <span class="side away inl">AWAY</span> @ ${h.abbr} <span class="side home inl">HOME</span></div>
   <div class="sub" style="margin-top:4px">${manilaFull(ev.date)} · ${badge} ${confChip(p)}</div>
   <div id="lv-${id}">${liveLine(ev)}</div>
   <div style="margin:10px 0 4px"><button class="tbtn" onclick="openTeam('${a.id}','${id}')">👥 ${a.abbr}</button><button class="tbtn" onclick="openTeam('${h.id}','${id}')">👥 ${h.abbr}</button></div>
-  <div class="prob">${pbar(a,h,pAp,pHp,12)}<div class="pl"><span>${a.abbr} ${pAp}%</span><span>${pHp}% ${h.abbr}</span></div></div>
+  <div class="prob">${pbar(a,h,pAp,pHp,12)}<div class="pl"><span>${a.abbr} ${pAp}%</span><span>${pHp}% ${h.abbr}</span></div></div>${calNote}
   <div class="tiles" style="margin-top:10px"><div class="tile g"><small>Pick</small><b>${fav.abbr} -${Math.abs(p.spread).toFixed(1)}</b></div><div class="tile"><small>Score</small><b>${Math.round(p.sA)}–${Math.round(p.sH)}</b></div><div class="tile"><small>Total</small><b>${p.tot.toFixed(0)}</b></div></div>
-  <div style="margin-top:10px">${oddsHTML(ev)}</div>
+  <div style="margin-top:10px">${oddsHTML(ev,p)}</div>
   <h2>Mga factor <span class="lg"><span style="color:var(--aw)">◀ ${a.abbr}</span> · <span style="color:var(--hm)">${h.abbr} ▶</span></span></h2>
   ${dvRows(Object.entries(p.F).map(([k,v])=>[LABELS[k]||k,v]))}`;
 
@@ -1092,7 +1194,7 @@ async function openDetail(id){
   html+=`<h2>Schedule</h2><table class="num"><tr><th></th><th>${a.abbr}</th><th>${h.abbr}</th></tr>
     <tr><td>Pahinga (araw)</td><td${bad(fA.b2b)}>${fA.rest==null?'—':fA.b2b?'B2B':fA.rest}</td><td${bad(fH.b2b)}>${fH.rest==null?'—':fH.b2b?'B2B':fH.rest}</td></tr>
     <tr><td>Laro sa 4 gabi</td><td${bad(fA.n4>=3)}>${fA.n4??'—'}</td><td${bad(fH.n4>=3)}>${fH.n4??'—'}</td></tr>
-    <tr><td>Road trip game #</td><td${bad(fA.trip>=4)}>${fA.trip||'—'}</td><td${bad(fH.trip>=4)}>${fH.trip||'—'}</td></tr>
+    <tr><td>Road trip game #</td><td${bad(fA.trip>=5)}>${fA.trip||'—'}</td><td${bad(fH.trip>=5)}>${fH.trip||'—'}</td></tr>
     <tr><td>Biyahe (mi)</td><td>${fA.mi?Math.round(fA.mi):'—'}</td><td>${fH.mi?Math.round(fH.mi):'—'}</td></tr>
     <tr><td>Timezone shift</td><td${bad(Math.abs(fA.tz||0)>=2)}>${fA.tz?(fA.tz>0?'+':'')+fA.tz+'h':'—'}</td><td${bad(Math.abs(fH.tz||0)>=2)}>${fH.tz?(fH.tz>0?'+':'')+fH.tz+'h':'—'}</td></tr></table>`;
 
