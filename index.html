@@ -179,6 +179,7 @@ button{font-family:inherit;color:inherit}
 .cb u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn);text-decoration:none}
 .lgd{display:flex;gap:12px;font-size:10px;color:var(--mut);margin-top:4px}
 .lgd b{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.tn{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line2)}
 
 /* ===== Modal ===== */
 #modal{position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px;z-index:60}
@@ -276,7 +277,7 @@ footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;color:var(--mut);font-
   <main id="grid"></main>
 </div>
 
-<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas line ay reference at pang-benchmark lang, hindi ginagamit sa prediction. Naka-save sa browser mo ang picks at tracker.</footer>
+<footer>Para sa libangan lang, hindi garantiya. Data: ESPN. Ang Vegas line ay reference at pang-benchmark lang, hindi ginagamit sa prediction. Naka-save sa browser mo ang picks, tracker at tuning.</footer>
 
 <div id="ov" onclick="toggleDrawer(false)"></div>
 <aside id="drawer">
@@ -291,20 +292,31 @@ const API='https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const API2='https://site.api.espn.com/apis/v2/sports/basketball/nba';
 const SEASON_START='2026-10-15';
 const PRIOR_SEASON=2026;            // 2025-26
-const PRIOR_WEIGHTS=[.55,.30,.15];  // huling 3 season (pinakamabigat ang pinakabago)
-const PRIOR_REGRESS=0.7;            // regression papunta sa average
-const PRIOR_K=10;                   // bigat ng prior = parang 10 laro
-const HCA=2.5;
+const PRIOR_WEIGHTS=[.55,.30,.15];
+const PRIOR_REGRESS=0.7;
+const PRIOR_K=10;
 const REFRESH_MS=20000;
 const SAMPLE=15;
 const RECENT=5;
 const KEEP_DAYS=3;
-const CAL_MIN=0.70,CAL_MAX=0.82,CAL_GAMES=20;   // calibration: mas malakas ang shrink kapag kaunti pa ang laro
-const P_MIN=0.08,P_MAX=0.90;                    // hangganan ng win probability
-const LG={tp:0.36,orb:0.27,tov:0.135};
+const CAL_MIN=0.70,CAL_MAX=0.82,CAL_GAMES=20;
+const P_MIN=0.08,P_MAX=0.90;
+const LG={tp:0.36,orb:0.27,tov:0.135,tpa:37};
+const OWN3_KEEP=0.5;     // luck-adjust: kalahati lang ng paglihis ng sariling 3P% ang itinuturing na totoo (naka-clamp sa 33-39%)
+const OPP3_KEEP=0.25;    // luck-adjust: 25% lang ng paglihis ng 3P% ng kalaban ang itinuturing na skill ng depensa
+
+/* ---------- mga parameter ng model (default; maaaring palitan ng tuning mula sa nakaraang season) ---------- */
+const DEF={K:20,HCA:2.5,MCAP:99,B2B:2,FC:0.12,LAM:1,B:0.145};
+const PRM={...DEF};
+const TUNE_KEY='nbaTune_v1';
+let TUNE=null,TUNING='idle';
+try{TUNE=JSON.parse(localStorage.getItem(TUNE_KEY)||'null')}catch(e){}
+if(TUNE&&TUNE.use&&TUNE.p)Object.assign(PRM,TUNE.p);
+
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rd=x=>Math.round(x*10)/10;
+const sleep0=()=>new Promise(r=>setTimeout(r,0));
 const dayIn=(d,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 const fmtET=d=>dayIn(d,'America/New_York');
 const fmtMN=d=>dayIn(d,'Asia/Manila');
@@ -354,7 +366,6 @@ function parseOdds(id,c,pre){
 }
 const mlf=n=>n==null||n===''?'—':(+n>0?'+':'')+n;
 const imp=m=>{m=+m;if(!m)return null;return m<0?-m/(-m+100):100/(m+100)};
-// Sino ang paborito ng Vegas? fh=1 kung home. p = probability ng home (no-vig) kung may moneyline
 function vegasOf(ev){
   const o=ev.odds;if(!o)return null;
   const ph=imp(o.mh),pa=imp(o.ma);
@@ -406,7 +417,6 @@ function getPred(ev){
   return s?{...s.pred,labels:LABELS}:null;
 }
 
-// idagdag ang isang tapos na laro sa stats S
 function addStat(S,s){
   const y=s.hs>s.as?1:0,p=s.pred.p,ok=((p>=.5)?1:0)===y;
   S.bs+=(p-y)**2;S.bn++;
@@ -470,11 +480,24 @@ function renderTracker(){
   $('#trk').innerHTML=s.n?`<span class="pill">🎯 <b>${s.w}-${s.l}</b> <i>${Math.round(s.w/s.n*100)}%</i>${br}<span class="dots">${s.seq.map(x=>`<i class="dt ${x?'ok':'no'}"></i>`).join('')}</span></span>`
     :'<span class="pill">🎯 <b>0-0</b> <i>accuracy</i></span>';
 }
+function tuneHTML(){
+  let body;
+  if(TUNE&&TUNE.p){
+    const p=TUNE.p;
+    body=`Backtest sa nakaraang season (${TUNE.n} laro, holdout 40%): logloss ${TUNE.dTe.toFixed(3)} → ${TUNE.tTe.toFixed(3)}. `
+      +(TUNE.use?`<b class="w-txt">Ginagamit ang tuned:</b> K ${p.K} · HCA ${p.HCA} · cap ${p.MCAP>=99?'wala':p.MCAP} · B2B ${p.B2B} · form ${p.FC}${p.LAM<1?' (EWMA)':''} · slope ${p.B}`
+        :'Walang sapat na pagbuti sa holdout, kaya default ang gamit.');
+  }else if(TUNING==='run')body='Sinusuri ang nakaraang season sa background para i-tune ang model…';
+  else if(TUNING==='fail')body='Hindi na-load ang nakaraang season, default ang gamit ng model.';
+  else body='Hindi pa na-tune.';
+  return `<div class="tn"><h4>Tuning (backtest)</h4><div class="note" style="margin-top:0">${body} <br>Mas mababang logloss = mas maganda. Approximate lang ito, dahil Elo/form/rest/home lang ang kayang i-backtest mula sa scoreboard.</div></div>`;
+}
 function renderStats(){
   const S=computeStats();
-  if(!S.bn){$('#statsBody').innerHTML='<div class="lab"><h4>Accuracy lab</h4><div class="sub">Walang tapos na laro pa para masukat.</div></div>';return}
+  let html;
+  if(!S.bn){html='<div class="lab"><h4>Accuracy lab</h4><div class="sub">Walang tapos na laro pa para masukat.</div>'+tuneHTML()+'</div>';$('#statsBody').innerHTML=html;return}
   const brier=S.bs/S.bn;
-  let html=`<div class="lab"><h4>Accuracy lab · ${S.bn} laro</h4>
+  html=`<div class="lab"><h4>Accuracy lab · ${S.bn} laro</h4>
     <table class="num"><tr><th></th><th>Model</th><th>Vegas</th></tr>`;
   if(S.vn){
     html+=`<tr><td>Tamang pick (${S.vn} laro)</td><td${S.vmw>=S.vw?' class="w-txt"':''}>${S.vmw}-${S.vn-S.vmw} · ${pct(S.vmw/S.vn)}%</td><td${S.vw>S.vmw?' class="w-txt"':''}>${S.vw}-${S.vn-S.vw} · ${pct(S.vw/S.vn)}%</td></tr>`;
@@ -490,7 +513,7 @@ function renderStats(){
     html+=`<div class="cal"><span>${names[i]}</span><div class="cb"><i style="width:${ac}%"></i><u style="left:calc(${pr}% - 1px)"></u></div><span>real ${Math.round(ac)}% · ${b[0]} laro</span></div>`;
   });
   html+=`<div class="lgd"><span><b style="background:var(--ok)"></b>Aktwal na panalo</span><span><b style="background:var(--warn)"></b>Sinabi ng model</span></div>
-    <div class="note">Brier overall ${brier.toFixed(3)} (0.250 = hula lang). ${S.bn<100?'Maliit pa ang sample (wala pang 100 laro), kaya puwedeng malayo sa totoo.':''} Kasama sa bilang ang mga lumang pick bago ang calibration.</div></div>`;
+    <div class="note">Brier overall ${brier.toFixed(3)} (0.250 = hula lang). ${S.bn<100?'Maliit pa ang sample (wala pang 100 laro), kaya puwedeng malayo sa totoo.':''} Kasama sa bilang ang mga lumang pick bago ang mga pagbabago sa model.</div>${tuneHTML()}</div>`;
   $('#statsBody').innerHTML=html;
 }
 function toggleDrawer(on){$('#drawer').classList.toggle('show',on);$('#ov').classList.toggle('show',on)}
@@ -558,9 +581,9 @@ async function loadPriorSeason(season){
     walk(j);return Object.keys(out).length?out:null;
   }catch(e){return null}
 }
-// Panimulang rating: weighted average ng huling 3 season (kung available), may regression
-async function loadPrior(){
-  const res=await Promise.all(PRIOR_WEIGHTS.map((w,i)=>loadPriorSeason(PRIOR_SEASON-i)));
+// Panimulang rating: weighted average ng huling 3 season (mula sa 'base'), may regression
+async function loadPrior(base=PRIOR_SEASON){
+  const res=await Promise.all(PRIOR_WEIGHTS.map((w,i)=>loadPriorSeason(base-i)));
   const ids=new Set();res.forEach(r=>r&&Object.keys(r).forEach(k=>ids.add(k)));
   const out={};
   for(const id of ids){
@@ -582,30 +605,31 @@ async function loadInj(){
   }catch(e){return {}}
 }
 
-/* ---------- ratings ---------- */
+/* ---------- ratings (may cap sa margin at EWMA na form, galing sa tuning) ---------- */
 function buildModel(games){
   const T={};
   const get=t=>T[t.id]??={id:t.id,abbr:t.abbr,name:t.name,logo:t.logo,color:t.color,g:[],prior:PRIOR[t.id]??0};
   games=[...games].sort((a,b)=>a.date.localeCompare(b.date));
+  const MC=PRM.MCAP,HC=PRM.HCA;
   for(const g of games){
-    const H=get(g.home),A=get(g.away),m=g.home.score-g.away.score;
-    H.g.push({id:g.id,day:g.etDay,opp:A.id,home:true,pf:g.home.score,pa:g.away.score,m});
-    A.g.push({id:g.id,day:g.etDay,opp:H.id,home:false,pf:g.away.score,pa:g.home.score,m:-m});
+    const H=get(g.home),A=get(g.away),m=g.home.score-g.away.score,mc=clamp(m,-MC,MC);
+    H.g.push({id:g.id,day:g.etDay,opp:A.id,home:true,pf:g.home.score,pa:g.away.score,m,mc});
+    A.g.push({id:g.id,day:g.etDay,opp:H.id,home:false,pf:g.away.score,pa:g.home.score,m:-m,mc:-mc});
   }
   const ids=Object.keys(T);
   let r={};ids.forEach(i=>r[i]=0);
   for(let it=0;it<30;it++){
     const nr={};
     for(const i of ids){const t=T[i];
-      nr[i]=t.g.length?t.g.reduce((s,x)=>s+(x.m-(x.home?HCA:-HCA))+(r[x.opp]||0),0)/t.g.length:0;}
+      nr[i]=t.g.length?t.g.reduce((s,x)=>s+(x.mc-(x.home?HC:-HC))+(r[x.opp]||0),0)/t.g.length:0;}
     r=nr;
   }
   const elo={};ids.forEach(i=>elo[i]=1500+T[i].prior*25);
   for(const g of games){
-    const h=g.home.id,a=g.away.id,m=g.home.score-g.away.score;
-    const dH=elo[h]+HCA*25-elo[a],p=1/(1+Math.pow(10,-dH/400));
+    const h=g.home.id,a=g.away.id,m=clamp(g.home.score-g.away.score,-MC,MC);
+    const dH=elo[h]+HC*25-elo[a],p=1/(1+Math.pow(10,-dH/400));
     const mult=Math.pow(Math.abs(m)+3,0.8)/(7.5+0.006*Math.abs(dH));
-    const d=20*mult*((m>0?1:0)-p);elo[h]+=d;elo[a]-=d;
+    const d=PRM.K*mult*((m>0?1:0)-p);elo[h]+=d;elo[a]-=d;
   }
   const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
   for(const i of ids){
@@ -616,7 +640,8 @@ function buildModel(games){
     t.pa=n?t.g.reduce((s,x)=>s+x.pa,0)/n:112;
     t.net=t.pf-t.pa;
     const l10=t.g.slice(-10);
-    t.l10=l10.length?l10.reduce((s,x)=>s+x.m,0)/l10.length:0;
+    let sn=0,sd=0;l10.forEach((x,j)=>{const wt=Math.pow(PRM.LAM,l10.length-1-j);sn+=wt*x.mc;sd+=wt});
+    t.l10=sd?sn/sd:0;
     t.w=t.g.filter(x=>x.m>0).length;t.l=n-t.w;
     const HG=t.g.filter(x=>x.home),RG=t.g.filter(x=>!x.home);
     t.hn=HG.length;t.rn=RG.length;
@@ -676,7 +701,7 @@ function getSummary(id){
   })();
 }
 
-/* ---------- players + team advanced ---------- */
+/* ---------- players + team advanced (may luck-adjust sa 3-point) ---------- */
 const z=()=>({gp:0,st:0,min:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,tpm:0,tpa:0});
 const addP=(X,p)=>{X.gp++;X.st+=p.st;X.min+=p.min;X.pts+=p.pts;X.reb+=p.reb;X.ast+=p.ast;X.stl+=p.stl;X.blk+=p.blk;X.to+=p.to;X.fgm+=p.fgm;X.fga+=p.fga;X.tpm+=p.tpm;X.tpa+=p.tpa};
 const dv=(a,b)=>b?a/b:0;
@@ -717,10 +742,15 @@ async function loadTeam(id){
   let team=null;const g=S.g;
   if(g){
     const m=S.m,o=S.o,P=S.poss;
-    team={gp:g,pace:P/g,ortg:dv(m.pts,P)*100,drtg:dv(o.pts,P)*100,
+    // Luck adjustment: ang 3P% ng kalaban ay halos swerte; ang sariling 3P% ay bahagyang hinihila sa average (33-39%)
+    const own3=m.tpa?m.tpm/m.tpa:LG.tp,opp3=o.tpa?o.tpm/o.tpa:LG.tp;
+    const ownAdj=clamp(LG.tp+(own3-LG.tp)*OWN3_KEEP,.33,.39),oppAdj=LG.tp+(opp3-LG.tp)*OPP3_KEEP;
+    const ortgA=dv(m.pts+(m.tpa*ownAdj-m.tpm)*3,P)*100,drtgA=dv(o.pts+(o.tpa*oppAdj-o.tpm)*3,P)*100;
+    team={gp:g,pace:P/g,ortg:dv(m.pts,P)*100,drtg:dv(o.pts,P)*100,ortgA,drtgA,netAdj:ortgA-drtgA,
       off:{efg:dv(m.fgm+.5*m.tpm,m.fga)*100,tov:dv(m.to,m.fga+.44*m.fta+m.to)*100,orb:dv(m.orb,m.orb+o.drb)*100,ftr:dv(m.ftm,m.fga)*100},
       def:{efg:dv(o.fgm+.5*o.tpm,o.fga)*100,tov:dv(o.to,o.fga+.44*o.fta+o.to)*100,drb:dv(m.drb,m.drb+o.orb)*100,ftr:dv(o.ftm,o.fga)*100},
       fgp:dv(m.fgm,m.fga)*100,tpp:dv(m.tpm,m.tpa)*100,oppTpp:dv(o.tpm,o.tpa)*100,tpa:m.tpa/g,missPG:(m.fga-m.fgm)/g,
+      tppA:ownAdj,oppTpa:o.tpa/g,
       reb:m.reb/g,ast:m.ast/g,to:m.to/g,stl:m.stl/g,blk:m.blk/g};
     team.net=team.ortg-team.drtg;
   }
@@ -788,7 +818,7 @@ function scorers(id,predScore){
   return {top,star};
 }
 
-/* ---------- schedule / fatigue (na-tune base sa research) ---------- */
+/* ---------- schedule / fatigue ---------- */
 function fatigue(id,ev){
   const prevs=allEvents().filter(e=>e.type!==1&&e.id!==ev.id&&e.date<ev.date&&(e.home.id===id||e.away.id===id))
     .sort((a,b)=>a.date.localeCompare(b.date));
@@ -809,18 +839,16 @@ function fatigue(id,ev){
   else if(n6>=4){out.pts+=.6;out.tags.push('4 laro sa 6 gabi')}
   if(out.b2b&&out.mi>600){out.pts+=.5;out.tags.push(`${Math.round(out.mi)} mi biyahe sa back-to-back`)}
   else if(out.mi>1500&&out.rest<=1){out.pts+=.4;out.tags.push(`${Math.round(out.mi)} mi biyahe`)}
-  // road trip: ang ika-5 na sunod na road game pataas lang ang malinaw na mas mababa ang win rate
   if(trip>=5){out.pts+=Math.min(1.5,.5*(trip-4));out.tags.push(`road game #${trip} sa trip`)}
   if(Math.abs(out.tz)>=2&&out.rest<=1){out.pts+=out.tz>0?.5:.3;out.tags.push(`timezone ${out.tz>0?'+':''}${out.tz}h`)}
-  // sobrang tagal na pahinga (3-6 araw): bahagyang "kinakalawang"
   if(out.rest>=3&&out.rest<=6){out.pts+=.3;out.tags.push(`${out.rest} araw na pahinga (rust)`)}
   return out;
 }
 
-/* ---------- style ---------- */
+/* ---------- style (3-point: volume na pinapayagan, hindi ang % ng kalaban na halos swerte) ---------- */
 function styleEdge(X,Y,k){
   const c=v=>clamp(v,-1.5,1.5);
-  const t3=c(X.tpa*(Y.oppTpp-LG.tp*100)/100*3*0.5*k);
+  const t3=c((Y.oppTpa-LG.tpa)*(3*X.tppA-1.1)*0.5*k);
   const rb=c(X.missPG*((100-Y.def.drb)-LG.orb*100)/100*1.1*0.5*k);
   const tv=c(-(Y.def.tov-LG.tov*100)/100*X.pace*0.9*0.5*k);
   return {t3,rb,tv};
@@ -835,11 +863,11 @@ function predict(ev){
   const rtH=returning(H),rtA=returning(A);
   const tH=PL_DONE[H.id]?.team,tA=PL_DONE[A.id]?.team;
   const h2hG=H.g.filter(x=>x.opp===A.id);
-  const h2h=h2hG.length?h2hG.reduce((s,x)=>s+(x.home?x.m-HCA:x.m+HCA),0)/h2hG.length*0.1:0;
+  const h2h=h2hG.length?h2hG.reduce((s,x)=>s+(x.home?x.m-PRM.HCA:x.m+PRM.HCA),0)/h2hG.length*0.1:0;
   let eff=0,style=0,sd={t3:0,rb:0,tv:0};
   if(tH&&tA){
     const k=Math.min(tH.gp,tA.gp);
-    eff=clamp(0.25*(tH.net-tA.net)*k/(k+12),-3,3);
+    eff=clamp(0.25*(tH.netAdj-tA.netAdj)*k/(k+12),-3,3);
     const ks=k/(k+10);
     const eH=styleEdge(tH,tA,ks),eA=styleEdge(tA,tH,ks);
     sd={t3:eH.t3-eA.t3,rb:eH.rb-eA.rb,tv:eH.tv-eA.tv};
@@ -847,12 +875,14 @@ function predict(ev){
   }
   const kH=H.hn/(H.hn+15),kA=A.rn/(A.rn+15);
   const split=clamp(0.5*((H.hm-H.mavg)*kH-(A.rm-A.mavg)*kA),-2,2);
+  // Back-to-back: malaking bahagi ng epekto nito ay dahil pinapahinga ang star. Kapag may injury na sa report, binabawasan ang flat B2B para hindi doble ang bilang.
+  const redH=clamp(iH.pts/3,0,.6),redA=clamp(iA.pts/3,0,.6);
   const F={
     rating:H.str-A.str,
-    home:HCA,
-    rest:(fA.b2b?2:0)-(fH.b2b?2:0),
+    home:PRM.HCA,
+    rest:(fA.b2b?PRM.B2B*(1-redA):0)-(fH.b2b?PRM.B2B*(1-redH):0),
     sched:fA.pts-fH.pts,
-    form:0.12*(H.l10-A.l10),
+    form:PRM.FC*(H.l10-A.l10),
     h2h,
     inj:iA.pts-iH.pts,
     ret:rtA.pts-rtH.pts,
@@ -860,16 +890,120 @@ function predict(ev){
   };
   const spread=Object.values(F).reduce((a,b)=>a+b,0);
   const k=Math.min(H.n,A.n);
-  // Calibration: ibinababa ang sobrang kumpiyansa (mas malakas kapag kaunti pa ang laro)
-  const pr=1/(1+Math.exp(-spread*0.145));
+  const pr=1/(1+Math.exp(-spread*PRM.B));
   const cal=CAL_MIN+(CAL_MAX-CAL_MIN)*Math.min(1,k/CAL_GAMES);
-  const p=clamp(1/(1+Math.exp(-spread*0.145*cal)),P_MIN,P_MAX);
+  const p=clamp(1/(1+Math.exp(-spread*PRM.B*cal)),P_MIN,P_MAX);
   let tot=(H.n&&A.n)?(H.pf+A.pa)/2+(A.pf+H.pa)/2:224;
   if(tH&&tA){const pc=(tH.pace+tA.pace)/2;const t2=pc/100*((tH.ortg+tA.drtg)/2+(tA.ortg+tH.drtg)/2);tot=(tot+t2)/2}
   const sH=(tot+spread)/2,sA=(tot-spread)/2;
   const SA=scorers(A.id,sA),SHm=scorers(H.id,sH);
   const ts=SA&&SHm?{a:SA.top,h:SHm.top,ka:SA.star,kh:SHm.star}:null;
   return {p,pr,cal,spread,F,labels:LABELS,reasons:[],sH,sA,tot,fH,fA,iH,iA,rtH,rtA,sd,tH,tA,k,ts};
+}
+
+/* ---------- Backtest / tuning gamit ang nakaraang season (scoreboard lang) ---------- */
+const BT_START='2025-10-15',BT_END='2026-04-20';
+function btGame(e){
+  const c=e.competitions?.[0];if(!c)return null;
+  const st=(c.status||e.status)?.type;if(!st?.completed)return null;
+  const h=c.competitors.find(x=>x.homeAway==='home'),a=c.competitors.find(x=>x.homeAway==='away');
+  if(!h||!a)return null;
+  return {id:e.id,d:e.date,day:fmtET(new Date(e.date)),h:String(h.team.id),a:String(a.team.id),hs:+h.score||0,as:+a.score||0};
+}
+async function btRange(a,b){
+  try{const j=await getJSON(`${API}/scoreboard?dates=${ymd(a)}-${ymd(b)}&limit=400`);return j.events||[]}catch(e){return null}
+}
+async function btDay(d){
+  try{const j=await getJSON(`${API}/scoreboard?dates=${ymd(d)}&limit=100`);return j.events||[]}catch(e){return []}
+}
+async function loadLastSeason(){
+  const days=[];for(let d=BT_START;d<=BT_END;d=addDays(d,1))days.push(d);
+  const map=new Map();
+  const take=ev=>{for(const e of ev){if(e.season?.type!=null&&e.season.type!==2)continue;const g=btGame(e);if(g)map.set(g.id,g)}};
+  const chunks=[];for(let i=0;i<days.length;i+=7)chunks.push([days[i],days[Math.min(i+6,days.length-1)]]);
+  for(let i=0;i<chunks.length;i+=6){
+    const res=await Promise.all(chunks.slice(i,i+6).map(c=>btRange(c[0],c[1])));
+    res.forEach(r=>r&&take(r));
+  }
+  if(map.size>=1000)return [...map.values()];
+  map.clear();   // hindi gumana ang range query, kaya isa-isang araw
+  for(let i=0;i<days.length;i+=10){
+    const res=await Promise.all(days.slice(i,i+10).map(btDay));
+    res.forEach(take);
+  }
+  return [...map.values()];
+}
+function btPass(G,prior,K,HC,MC,LAM){
+  const n=G.length,ED=new Float32Array(n),FD=new Float32Array(n);
+  const elo={},ms={};
+  const el=id=>elo[id]??(elo[id]=1500+(prior[id]||0)*25);
+  const w=[];for(let i=0;i<10;i++)w.push(Math.pow(LAM,i));
+  const form=id=>{const a=ms[id];if(!a||!a.length)return 0;let sn=0,sd=0;
+    for(let i=0;i<a.length&&i<10;i++){const x=a[a.length-1-i];sn+=w[i]*x;sd+=w[i]}return sn/sd};
+  for(let i=0;i<n;i++){
+    const g=G[i],eh=el(g.h),ea=el(g.a);
+    ED[i]=(eh-ea)/25;FD[i]=form(g.h)-form(g.a);
+    const m=clamp(g.hs-g.as,-MC,MC);
+    const dH=eh+HC*25-ea,p=1/(1+Math.pow(10,-dH/400));
+    const mult=Math.pow(Math.abs(m)+3,0.8)/(7.5+0.006*Math.abs(dH));
+    const d=K*mult*((m>0?1:0)-p);
+    elo[g.h]=eh+d;elo[g.a]=ea-d;
+    (ms[g.h]??=[]).push(m);(ms[g.a]??=[]).push(-m);
+  }
+  return {ED,FD};
+}
+function btLoss(ps,BH,BA,Y,HC,B2B,FC,B,from,to){
+  const {ED,FD}=ps;let s=0;
+  for(let i=from;i<to;i++){
+    const sp=ED[i]+HC+B2B*(BA[i]-BH[i])+FC*FD[i];
+    let p=1/(1+Math.exp(-B*sp));p=p<.02?.02:p>.98?.98:p;
+    s-=Y[i]?Math.log(p):Math.log(1-p);
+  }
+  return s/(to-from);
+}
+async function runTune(){
+  try{
+    const raw=await loadLastSeason();
+    if(raw.length<900)return null;
+    const prior=await loadPrior(PRIOR_SEASON-1);
+    const G=raw.sort((a,b)=>a.d.localeCompare(b.d));
+    const last={};
+    for(const g of G){
+      const dh=last[g.h],da=last[g.a];
+      g.bh=dh&&Math.round((Date.parse(g.day)-Date.parse(dh))/864e5)===1?1:0;
+      g.ba=da&&Math.round((Date.parse(g.day)-Date.parse(da))/864e5)===1?1:0;
+      last[g.h]=g.day;last[g.a]=g.day;
+    }
+    const N=G.length,split=Math.floor(N*0.6);
+    const BH=new Uint8Array(N),BA=new Uint8Array(N),Y=new Uint8Array(N);
+    G.forEach((g,i)=>{BH[i]=g.bh;BA[i]=g.ba;Y[i]=g.hs>g.as?1:0});
+    const p0=btPass(G,prior,DEF.K,DEF.HCA,DEF.MCAP,DEF.LAM);
+    const dTe=btLoss(p0,BH,BA,Y,DEF.HCA,DEF.B2B,DEF.FC,DEF.B,split,N);
+    let best=null;
+    for(const K of [12,18,24,30])for(const HC of [2,2.5,3,3.5])for(const MC of [15,22,99])for(const LAM of [1,.85]){
+      const ps=btPass(G,prior,K,HC,MC,LAM);
+      for(const B2B of [0,1,1.5,2,3])for(const FC of [0,.08,.12,.18])for(const B of [.10,.12,.145,.17,.20]){
+        const l=btLoss(ps,BH,BA,Y,HC,B2B,FC,B,0,split);
+        if(!best||l<best.l)best={l,K,HCA:HC,MCAP:MC,LAM,B2B,FC,B};
+      }
+      await sleep0();
+    }
+    // i-refine ang slope
+    const pb=btPass(G,prior,best.K,best.HCA,best.MCAP,best.LAM);
+    let bl=1e9,bB=best.B;
+    for(let B=.08;B<=.22001;B+=.005){const l=btLoss(pb,BH,BA,Y,best.HCA,best.B2B,best.FC,B,0,split);if(l<bl){bl=l;bB=B}}
+    bB=Math.round(bB*1000)/1000;
+    const tTe=btLoss(pb,BH,BA,Y,best.HCA,best.B2B,best.FC,bB,split,N);
+    const p={K:best.K,HCA:best.HCA,MCAP:best.MCAP,B2B:best.B2B,FC:best.FC,LAM:best.LAM,B:bB};
+    return {v:1,use:tTe<dTe-0.002,p,n:N,dTe,tTe,ts:Date.now()};
+  }catch(e){return null}
+}
+function afterTune(r){
+  if(!r){TUNING='fail';renderSaved();return}
+  TUNE=r;TUNING='done';
+  try{localStorage.setItem(TUNE_KEY,JSON.stringify(TUNE))}catch(e){}
+  if(r.use){Object.assign(PRM,r.p);rebuildModel();recordAll();renderGrid();renderTabs();renderTracker()}
+  renderSaved();
 }
 
 /* ---------- confidence label ---------- */
@@ -1179,14 +1313,14 @@ async function openDetail(id){
 
   if(aT&&hT){
     const C2=cmpHTML([
-      ['ORtg',aT.ortg,hT.ortg,1],['DRtg',aT.drtg,hT.drtg,0],['Net',aT.net,hT.net,1],['Pace',aT.pace,hT.pace,-1],
+      ['ORtg',aT.ortg,hT.ortg,1],['DRtg',aT.drtg,hT.drtg,0],['Net',aT.net,hT.net,1],['Net adj',aT.netAdj,hT.netAdj,1],['Pace',aT.pace,hT.pace,-1],
       ['eFG%',aT.off.efg,hT.off.efg,1],['eFG% opp',aT.def.efg,hT.def.efg,0],
       ['TOV%',aT.off.tov,hT.off.tov,0],['Forced',aT.def.tov,hT.def.tov,1],
       ['ORB%',aT.off.orb,hT.off.orb,1],['DRB%',aT.def.drb,hT.def.drb,1],
       ['FT rate',aT.off.ftr,hT.off.ftr,1],['Opp FT',aT.def.ftr,hT.def.ftr,0]]);
-    html+=`<h2>Four Factors</h2>${C2.html}${tally(C2.aw,C2.hw,a,h)}`;
+    html+=`<h2>Four Factors <span class="lg">Net adj = luck-adjusted sa 3-point</span></h2>${C2.html}${tally(C2.aw,C2.hw,a,h)}`;
     const sd=p.sd||{t3:0,rb:0,tv:0};
-    html+=`<h2>Style matchup <span class="lg"><span style="color:var(--aw)">◀ ${a.abbr}</span> · <span style="color:var(--hm)">${h.abbr} ▶</span></span></h2>${dvRows([['3-point',sd.t3],['Rebounding',sd.rb],['Turnovers',sd.tv]])}`;
+    html+=`<h2>Style matchup <span class="lg"><span style="color:var(--aw)">◀ ${a.abbr}</span> · <span style="color:var(--hm)">${h.abbr} ▶</span></span></h2>${dvRows([['3-pt shots',sd.t3],['Rebounding',sd.rb],['Turnovers',sd.tv]])}`;
   }
 
   const fA=p.fA||{},fH=p.fH||{};
@@ -1220,7 +1354,7 @@ async function openDetail(id){
     const todayMN=fmtMN(now),todayET=fmtET(now);
     DAYS=[todayMN,addDays(todayMN,1),addDays(todayMN,2)];
     const all=[];for(let d=SEASON_START;d<=addDays(todayET,3);d=addDays(d,1))all.push(d);
-    const [prior,inj]=await Promise.all([loadPrior(),loadInj(),Promise.all(all.map(loadDay))]);
+    const [prior,inj]=await Promise.all([loadPrior(PRIOR_SEASON),loadInj(),Promise.all(all.map(loadDay))]);
     PRIOR=prior;INJ=inj;
     const n=rebuildModel();
     recordAll();
@@ -1232,6 +1366,8 @@ async function openDetail(id){
       await loadDayTeams(i);recordAll();renderSaved();
     }
     setInterval(refreshLive,REFRESH_MS);
+    // Backtest sa nakaraang season (isang beses lang; naka-cache pagkatapos)
+    if(!TUNE){TUNING='run';renderSaved();runTune().then(afterTune)}
   }catch(err){
     $('#status').innerHTML=`<span style="color:var(--bad)">Hindi makuha ang data: ${err.message}</span>`;
   }
